@@ -3,6 +3,7 @@ use std::error::Error;
 use crate::u256::U256;
 use crate::CallInfo;
 use crate::Context;
+use crate::ExecutionResult;
 use crate::Machine;
 use crate::OpcodeHandler;
 
@@ -15,12 +16,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSstore {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         ctx.sstore(addr, val)?;
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -33,11 +34,11 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSload {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.sload(addr)?);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -50,12 +51,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.transient.insert(addr, val);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -68,13 +69,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTload {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         machine
             .stack
             .push(machine.transient.get(&addr).copied().unwrap_or_default());
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -87,7 +88,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?.lower_usize();
         let val = machine.pop_stack()?.to_bytes_be();
         while machine.memory.len() < addr.wrapping_add(32) {
@@ -97,7 +98,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
             machine.memory[addr + i] = *v;
         }
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -110,7 +111,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?.lower_usize();
         let mut ret = [0u8; 32];
         for i in 0..32 {
@@ -118,7 +119,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         }
         machine.stack.push(U256::from_bytes_be(&ret));
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -131,7 +132,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?.lower_usize();
         let val = machine.pop_stack()?.lower_usize();
         while machine.memory.len() < addr {
@@ -139,6 +140,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         }
         machine.memory.insert(addr, val as u8);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }

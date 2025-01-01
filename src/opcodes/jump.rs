@@ -3,6 +3,7 @@ use std::error::Error;
 use crate::u256::U256;
 use crate::CallInfo;
 use crate::Context;
+use crate::ExecutionResult;
 use crate::Machine;
 use crate::OpcodeHandler;
 use crate::XevmError;
@@ -16,7 +17,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let target = machine.pop_stack()?.lower_usize();
         if target >= text.len() {
             return Err(Box::new(XevmError::Other(
@@ -29,7 +30,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
             )));
         }
         machine.pc = target;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -42,9 +43,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpdest {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -57,7 +58,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let target = machine.pop_stack()?.lower_usize();
         let cond = machine.pop_stack()?;
         if target >= text.len() {
@@ -75,6 +76,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         } else {
             machine.pc += 1;
         }
-        Ok(())
+        Ok(None)
     }
 }

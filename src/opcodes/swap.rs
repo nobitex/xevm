@@ -2,6 +2,7 @@ use std::error::Error;
 
 use crate::CallInfo;
 use crate::Context;
+use crate::ExecutionResult;
 use crate::Machine;
 use crate::OpcodeHandler;
 use crate::XevmError;
@@ -15,7 +16,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let stack_len = machine.stack.len();
         if self.0 as usize >= stack_len {
             return Err(Box::new(XevmError::Other(
@@ -33,6 +34,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
         *a = b;
         machine.stack.push(a_val);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }

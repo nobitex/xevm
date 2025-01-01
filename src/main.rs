@@ -6,6 +6,13 @@ mod opcodes;
 use opcodes::*;
 
 #[derive(Debug, Clone)]
+enum ExecutionResult {
+    Reverted(Vec<u8>),
+    Returned(Vec<u8>),
+    Halted,
+}
+
+#[derive(Debug, Clone)]
 enum XevmError {
     Other(String),
 }
@@ -59,7 +66,7 @@ trait OpcodeHandler<C: Context> {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>>;
 }
 
 fn run<C: Context>(
@@ -67,7 +74,7 @@ fn run<C: Context>(
     machine: &mut Machine,
     code: &[u8],
     call_info: &CallInfo,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<ExecutionResult, Box<dyn Error>> {
     let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
     opcode_table.insert(0x00, Box::new(OpcodeHalt));
     opcode_table.insert(0x01, Box::new(OpcodeAdd));
@@ -151,9 +158,11 @@ fn run<C: Context>(
 
     while machine.pc < code.len() {
         let opcode = code[machine.pc];
-        println!("0x{:x}", opcode);
+        //println!("0x{:x}", opcode);
         if let Some(opcode_fn) = opcode_table.get(&opcode) {
-            opcode_fn.call(ctx, machine, code, call_info)?;
+            if let Some(res) = opcode_fn.call(ctx, machine, code, call_info)? {
+                return Ok(res);
+            }
         } else {
             return Err(Box::new(XevmError::Other(format!(
                 "Unknown opcode 0x{:02x}!",
@@ -161,7 +170,7 @@ fn run<C: Context>(
             ))));
         }
     }
-    Ok(())
+    Err(Box::new(XevmError::Other("Program didn't finish!".into())))
 }
 
 trait Context {
@@ -214,15 +223,18 @@ fn main() {
         caller: U256::ZERO,
         calldata: vec![0xd0, 0x9d, 0xe0, 0x8a],
     };
-    run(&mut ctx, &mut m, &code, &call_info);
+    let res = run(&mut ctx, &mut m, &code, &call_info).unwrap();
+    println!("{:?}", res);
     m.pc = 0;
     m.memory.clear();
     m.stack.clear();
-    run(&mut ctx, &mut m, &code, &call_info);
+    let res = run(&mut ctx, &mut m, &code, &call_info).unwrap();
+    println!("{:?}", res);
     m.pc = 0;
     m.memory.clear();
     m.stack.clear();
-    run(&mut ctx, &mut m, &code, &call_info);
+    let res = run(&mut ctx, &mut m, &code, &call_info).unwrap();
+    println!("{:?}", res);
     println!("{:?}", m);
     println!("{:?}", ctx);
 }

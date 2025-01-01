@@ -3,6 +3,7 @@ use std::error::Error;
 use crate::u256::U256;
 use crate::CallInfo;
 use crate::Context;
+use crate::ExecutionResult;
 use crate::Machine;
 use crate::OpcodeHandler;
 
@@ -15,10 +16,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine.stack.push(ctx.address()?);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -31,11 +32,11 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.balance(addr)?);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -48,10 +49,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCallvalue {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine.stack.push(call_info.call_value);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -64,10 +65,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine.stack.push(call_info.caller);
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -80,10 +81,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodesize {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine.stack.push(U256::from(text.len() as u64));
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -96,7 +97,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let dest_addr = machine.pop_stack()?.lower_usize();
         let addr = machine.pop_stack()?.lower_usize();
         let size = machine.pop_stack()?.lower_usize();
@@ -107,7 +108,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
             machine.memory[dest_addr + i] = text[addr + i];
         }
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -120,12 +121,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatasize {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         machine
             .stack
             .push(U256::from(call_info.calldata.len() as u64));
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -138,7 +139,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let dest_addr = machine.pop_stack()?.lower_usize();
         let addr = machine.pop_stack()?.lower_usize();
         let size = machine.pop_stack()?.lower_usize();
@@ -149,7 +150,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
             machine.memory[dest_addr + i] = call_info.calldata[addr + i];
         }
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -162,7 +163,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataload {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
         let offset = machine.pop_stack()?.lower_usize();
         let mut ret = [0u8; 32];
         for i in 0..32 {
@@ -174,6 +175,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataload {
         }
         machine.stack.push(U256::from_bytes_be(&ret));
         machine.pc += 1;
-        Ok(())
+        Ok(None)
     }
 }
