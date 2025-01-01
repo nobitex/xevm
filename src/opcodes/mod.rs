@@ -4,20 +4,19 @@ mod dup;
 mod external;
 mod halt;
 mod jump;
-mod mload;
-mod mstore;
+mod memory;
 mod mul;
 mod pop;
 mod push;
 mod ret;
+mod revert;
 mod sub;
 mod swap;
-mod tload;
-mod tstore;
 
 pub use add::OpcodeAdd;
 pub use cmp::{
-    OpcodeAnd, OpcodeEq, OpcodeGt, OpcodeIszero, OpcodeLt, OpcodeOr, OpcodeShl, OpcodeShr,
+    OpcodeAnd, OpcodeEq, OpcodeGt, OpcodeIszero, OpcodeLt, OpcodeOr, OpcodeSgt, OpcodeShl,
+    OpcodeShr, OpcodeSlt,
 };
 pub use dup::OpcodeDup;
 pub use external::{
@@ -25,13 +24,13 @@ pub use external::{
 };
 pub use halt::OpcodeHalt;
 pub use jump::{OpcodeJump, OpcodeJumpdest, OpcodeJumpi};
-pub use mload::OpcodeMload;
-pub use mstore::OpcodeMstore;
+pub use memory::{
+    OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
+};
 pub use mul::OpcodeMul;
 pub use pop::OpcodePop;
 pub use push::OpcodePush;
 pub use ret::OpcodeReturn;
+pub use revert::OpcodeRevert;
 pub use sub::OpcodeSub;
 pub use swap::OpcodeSwap;
-pub use tload::OpcodeTload;
-pub use tstore::OpcodeTstore;

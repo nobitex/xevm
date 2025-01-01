@@ -1,13 +1,14 @@
-use crate::CallInfo;
 use std::error::Error;
 
+use crate::CallInfo;
 use crate::Context;
 use crate::Machine;
 use crate::OpcodeHandler;
+use crate::XevmError;
 
 #[derive(Debug)]
-pub struct OpcodeTstore;
-impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
+pub struct OpcodeRevert;
+impl<C: Context> OpcodeHandler<C> for OpcodeRevert {
     fn call(
         &self,
         _ctx: &mut C,
@@ -15,10 +16,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<(), Box<dyn Error>> {
-        let addr = machine.pop_stack()?;
-        let val = machine.pop_stack()?;
-        machine.transient.insert(addr, val);
-        machine.pc += 1;
-        Ok(())
+        let offset = machine.pop_stack()?;
+        let sz = machine.pop_stack()?;
+        Err(Box::new(XevmError::Other("Reverted!".into())))
     }
 }

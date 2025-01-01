@@ -97,9 +97,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
         text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<(), Box<dyn Error>> {
-        unimplemented!();
+        let dest_addr = machine.pop_stack()?.lower_usize();
+        let addr = machine.pop_stack()?.lower_usize();
+        let size = machine.pop_stack()?.lower_usize();
+        while machine.memory.len() < dest_addr.wrapping_add(size) {
+            machine.memory.push(0);
+        }
+        for i in 0..size {
+            machine.memory[dest_addr + i] = text[addr + i];
+        }
         machine.pc += 1;
         Ok(())
     }
 }
-

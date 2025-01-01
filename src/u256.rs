@@ -1,6 +1,9 @@
-use std::ops::{Add, BitAnd, BitOr, Mul, Shl, Shr, Sub};
+use std::{
+    fmt::Debug,
+    ops::{Add, BitAnd, BitOr, Mul, Shl, Shr, Sub},
+};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct U256(pub u128, pub u128);
 
 impl From<u64> for U256 {
@@ -11,6 +14,11 @@ impl From<u64> for U256 {
 
 impl std::fmt::Display for U256 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "0x{:032x}{:032x}", self.1, self.0)
+    }
+}
+impl Debug for U256 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "0x{:032x}{:032x}", self.1, self.0)
     }
 }
@@ -25,7 +33,9 @@ impl U256 {
     pub fn lower_usize(&self) -> usize {
         self.0 as usize
     }
-    pub fn from_bytes(bytes: &[u8]) -> Self {
+    pub fn from_bytes_be(bytes: &[u8]) -> Self {
+        let mut bytes = bytes.to_vec();
+        bytes.reverse();
         let mut lower: [u8; 16] = [0; 16];
         let mut higher: [u8; 16] = [0; 16];
         let sz = std::cmp::min(16, bytes.len());
@@ -35,6 +45,12 @@ impl U256 {
             higher[..sz].copy_from_slice(&bytes[16..16 + sz]);
         }
         U256(u128::from_le_bytes(lower), u128::from_le_bytes(higher))
+    }
+    pub fn to_bytes_be(&self) -> [u8; 32] {
+        let mut ret = [0; 32];
+        ret[..16].copy_from_slice(&self.1.to_be_bytes());
+        ret[16..32].copy_from_slice(&self.0.to_be_bytes());
+        ret
     }
 }
 
