@@ -1,10 +1,9 @@
 mod add;
-mod address;
-mod balance;
+mod cmp;
 mod dup;
+mod external;
 mod halt;
 mod jump;
-mod jumpdest;
 mod mload;
 mod mstore;
 mod mul;
@@ -17,10 +16,15 @@ mod tload;
 mod tstore;
 
 pub use add::OpcodeAdd;
+pub use cmp::{
+    OpcodeAnd, OpcodeEq, OpcodeGt, OpcodeIszero, OpcodeLt, OpcodeOr, OpcodeShl, OpcodeShr,
+};
 pub use dup::OpcodeDup;
+pub use external::{
+    OpcodeAddress, OpcodeBalance, OpcodeCaller, OpcodeCallvalue, OpcodeCodecopy, OpcodeCodesize,
+};
 pub use halt::OpcodeHalt;
-pub use jump::OpcodeJump;
-pub use jumpdest::OpcodeJumpdest;
+pub use jump::{OpcodeJump, OpcodeJumpdest, OpcodeJumpi};
 pub use mload::OpcodeMload;
 pub use mstore::OpcodeMstore;
 pub use mul::OpcodeMul;
