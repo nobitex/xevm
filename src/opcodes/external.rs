@@ -110,3 +110,70 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
         Ok(())
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeCalldatasize;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldatasize {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        call_info: &CallInfo,
+    ) -> Result<(), Box<dyn Error>> {
+        machine
+            .stack
+            .push(U256::from(call_info.calldata.len() as u64));
+        machine.pc += 1;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeCalldatacopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        call_info: &CallInfo,
+    ) -> Result<(), Box<dyn Error>> {
+        let dest_addr = machine.pop_stack()?.lower_usize();
+        let addr = machine.pop_stack()?.lower_usize();
+        let size = machine.pop_stack()?.lower_usize();
+        while machine.memory.len() < dest_addr.wrapping_add(size) {
+            machine.memory.push(0);
+        }
+        for i in 0..size {
+            machine.memory[dest_addr + i] = call_info.calldata[addr + i];
+        }
+        machine.pc += 1;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeCalldataload;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldataload {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        call_info: &CallInfo,
+    ) -> Result<(), Box<dyn Error>> {
+        let offset = machine.pop_stack()?.lower_usize();
+        let mut ret = [0u8; 32];
+        for i in 0..32 {
+            ret[i] = call_info
+                .calldata
+                .get(offset + i)
+                .copied()
+                .unwrap_or_default();
+        }
+        machine.stack.push(U256::from_bytes_be(&ret));
+        machine.pc += 1;
+        Ok(())
+    }
+}

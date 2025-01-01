@@ -87,9 +87,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShl {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<(), Box<dyn Error>> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a << b);
+        let shift = machine.pop_stack()?;
+        let val = machine.pop_stack()?;
+        machine.stack.push(val << shift);
         machine.pc += 1;
         Ok(())
     }
@@ -105,9 +105,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShr {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<(), Box<dyn Error>> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a >> b);
+        let shift = machine.pop_stack()?;
+        let val = machine.pop_stack()?;
+        machine.stack.push(val >> shift);
         machine.pc += 1;
         Ok(())
     }

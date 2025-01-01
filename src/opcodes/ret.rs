@@ -16,8 +16,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeReturn {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<(), Box<dyn Error>> {
-        let offset = machine.pop_stack()?;
-        let sz = machine.pop_stack()?;
+        let offset = machine.pop_stack()?.lower_usize();
+        let sz = machine.pop_stack()?.lower_usize();
+        let return_value = machine.memory[offset..offset + sz].to_vec();
+        for v in return_value {
+            print!("{:02x}",v);
+        }
+        println!();
         Err(Box::new(XevmError::Other("Returned!".into())))
     }
 }

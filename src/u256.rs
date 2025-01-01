@@ -120,9 +120,15 @@ impl Shl for U256 {
     type Output = Self;
     fn shl(mut self, rhs: Self) -> Self::Output {
         let rhs = rhs.lower_usize();
-        let add_to_1 = self.0.wrapping_shr(128 - rhs as u32);
-        self.0 = self.0.wrapping_shl(rhs as u32);
-        self.1 = self.1.wrapping_shl(rhs as u32) + add_to_1;
+        if rhs <= 128 {
+            let add_to_1 = self.0.wrapping_shr(128 - rhs as u32);
+            self.0 = self.0.wrapping_shl(rhs as u32);
+            self.1 = self.1.wrapping_shl(rhs as u32) + add_to_1;
+        } else {
+            self.0 = 0;
+            self.1 = self.0.wrapping_shl(rhs as u32);
+        }
+
         self
     }
 }
@@ -131,9 +137,14 @@ impl Shr for U256 {
     type Output = Self;
     fn shr(mut self, rhs: Self) -> Self::Output {
         let rhs = rhs.lower_usize();
-        let add_to_0 = self.1.wrapping_shl(128 - rhs as u32);
-        self.0 = self.0.wrapping_shr(rhs as u32) + add_to_0;
-        self.1 = self.1.wrapping_shr(rhs as u32);
+        if rhs <= 128 {
+            let add_to_0 = self.1.wrapping_shl(128 - rhs as u32);
+            self.0 = self.0.wrapping_shr(rhs as u32) + add_to_0;
+            self.1 = self.1.wrapping_shr(rhs as u32);
+        } else {
+            self.0 = self.1.wrapping_shr(rhs as u32);
+            self.1 = 0;
+        }
         self
     }
 }
