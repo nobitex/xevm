@@ -7,7 +7,7 @@ use crate::OpcodeHandler;
 #[derive(Debug)]
 pub struct OpcodeSwap(pub u8);
 impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
-    fn call(&self, ctx: &mut C, machine: &mut Machine, text: &[u8]) -> Result<(), anyhow::Error> {
+    fn call(&self, _ctx: &mut C, machine: &mut Machine, _text: &[u8]) -> Result<(), anyhow::Error> {
         let stack_len = machine.stack.len();
         if self.0 as usize >= stack_len {
             return Err(anyhow!("Swap element doesn't exist!"));

@@ -8,7 +8,7 @@ use crate::OpcodeHandler;
 #[derive(Debug)]
 pub struct OpcodePush(pub u8);
 impl<C: Context> OpcodeHandler<C> for OpcodePush {
-    fn call(&self, ctx: &mut C, machine: &mut Machine, text: &[u8]) -> Result<(), anyhow::Error> {
+    fn call(&self, _ctx: &mut C, machine: &mut Machine, text: &[u8]) -> Result<(), anyhow::Error> {
         let ahead = &text[machine.pc + 1..];
         if ahead.len() < self.0 as usize {
             return Err(anyhow!("Not enough bytes!"));

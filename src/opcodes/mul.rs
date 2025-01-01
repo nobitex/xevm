@@ -5,7 +5,7 @@ use crate::OpcodeHandler;
 #[derive(Debug)]
 pub struct OpcodeMul;
 impl<C: Context> OpcodeHandler<C> for OpcodeMul {
-    fn call(&self, ctx: &mut C, machine: &mut Machine, text: &[u8]) -> Result<(), anyhow::Error> {
+    fn call(&self, _ctx: &mut C, machine: &mut Machine, _text: &[u8]) -> Result<(), anyhow::Error> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a * b);
