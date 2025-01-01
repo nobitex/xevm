@@ -1,11 +1,38 @@
+use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
-
 mod u256;
 use u256::U256;
 mod opcodes;
 use opcodes::*;
 
-use anyhow::anyhow;
+#[derive(Debug, Clone)]
+enum XevmError {
+    Other(String),
+}
+
+impl std::fmt::Display for XevmError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SuperError is here!")
+    }
+}
+
+impl Error for XevmError {
+    fn cause(&self) -> Option<&dyn Error> {
+        match self {
+            XevmError::Other(_) => None,
+        }
+    }
+    fn description(&self) -> &str {
+        match self {
+            XevmError::Other(other) => &other,
+        }
+    }
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            XevmError::Other(_) => None,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 struct Machine {
@@ -16,8 +43,11 @@ struct Machine {
 }
 
 impl Machine {
-    fn pop_stack(&mut self) -> Result<U256, anyhow::Error> {
-        self.stack.pop().ok_or(anyhow!("Stack empty!"))
+    fn pop_stack(&mut self) -> Result<U256, Box<dyn Error>> {
+        Ok(self
+            .stack
+            .pop()
+            .ok_or(XevmError::Other("Stack empty!".into()))?)
     }
 }
 
@@ -28,7 +58,7 @@ trait OpcodeHandler<C: Context> {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error>;
+    ) -> Result<(), Box<dyn Error>>;
 }
 
 fn run<C: Context>(
@@ -36,7 +66,7 @@ fn run<C: Context>(
     machine: &mut Machine,
     code: &[u8],
     call_info: CallInfo,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), Box<dyn Error>> {
     let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
     opcode_table.insert(0x00, Box::new(OpcodeHalt));
     opcode_table.insert(0x01, Box::new(OpcodeAdd));
@@ -121,17 +151,20 @@ fn run<C: Context>(
         if let Some(opcode_fn) = opcode_table.get(&opcode) {
             opcode_fn.call(ctx, machine, code, &call_info)?;
         } else {
-            return Err(anyhow!("Unknown opcode 0x{:02x}!", opcode));
+            return Err(Box::new(XevmError::Other(format!(
+                "Unknown opcode 0x{:02x}!",
+                opcode
+            ))));
         }
     }
     Ok(())
 }
 
 trait Context {
-    fn address(&self) -> Result<U256, anyhow::Error>;
-    fn balance(&self, address: U256) -> Result<U256, anyhow::Error>;
-    fn mload(&self, address: U256) -> Result<U256, anyhow::Error>;
-    fn mstore(&mut self, address: U256, value: U256) -> Result<(), anyhow::Error>;
+    fn address(&self) -> Result<U256, Box<dyn Error>>;
+    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
+    fn mload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
+    fn mstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>>;
 }
 
 struct CallInfo {
@@ -144,22 +177,22 @@ struct DummyContext {
     mem: HashMap<U256, U256>,
 }
 impl Context for DummyContext {
-    fn balance(&self, address: U256) -> Result<U256, anyhow::Error> {
+    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ONE)
     }
-    fn address(&self) -> Result<U256, anyhow::Error> {
+    fn address(&self) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ONE)
     }
-    fn mload(&self, address: U256) -> Result<U256, anyhow::Error> {
+    fn mload(&self, address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(self.mem.get(&address).copied().unwrap_or_default())
     }
-    fn mstore(&mut self, address: U256, value: U256) -> Result<(), anyhow::Error> {
+    fn mstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
         self.mem.insert(address, value);
         Ok(())
     }
 }
 
-fn parse_hex(s: &str) -> Result<Vec<u8>, anyhow::Error> {
+fn parse_hex(s: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut ret = Vec::new();
     for i in (0..s.len()).step_by(2) {
         ret.push(u8::from_str_radix(&s[i..i + 2], 16)?);

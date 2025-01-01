@@ -1,6 +1,7 @@
-use anyhow::anyhow;
-
 use crate::CallInfo;
+use crate::XevmError;
+use std::error::Error;
+
 use crate::Context;
 use crate::Machine;
 use crate::OpcodeHandler;
@@ -14,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeHalt {
         _machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
-        Err(anyhow!("Halt!"))
+    ) -> Result<(), Box<dyn Error>> {
+        Err(Box::new(XevmError::Other("Halt!".into())))
     }
 }

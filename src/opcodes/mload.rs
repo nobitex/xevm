@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::CallInfo;
 use crate::Context;
 use crate::Machine;
@@ -12,7 +14,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.mload(addr)?);
         machine.pc += 1;

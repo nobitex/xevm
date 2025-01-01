@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::CallInfo;
 use crate::Context;
 use crate::Machine;
@@ -12,7 +14,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMul {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a * b);

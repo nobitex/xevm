@@ -1,9 +1,10 @@
-use anyhow::anyhow;
+use std::error::Error;
 
 use crate::CallInfo;
 use crate::Context;
 use crate::Machine;
 use crate::OpcodeHandler;
+use crate::XevmError;
 
 #[derive(Debug)]
 pub struct OpcodeDup(pub u8);
@@ -14,15 +15,19 @@ impl<C: Context> OpcodeHandler<C> for OpcodeDup {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         if self.0 as usize >= machine.stack.len() {
-            return Err(anyhow!("Dup element doesn't exist!"));
+            return Err(Box::new(XevmError::Other(
+                "Dup element doesn't exist!".into(),
+            )));
         }
         let elem = machine
             .stack
             .get(machine.stack.len() - 1 - self.0 as usize)
             .copied()
-            .ok_or(anyhow!("Dup element doesn't exist!"))?;
+            .ok_or(Box::new(XevmError::Other(
+                "Dup element doesn't exist!".into(),
+            )))?;
         machine.stack.push(elem);
         machine.pc += 1;
         Ok(())

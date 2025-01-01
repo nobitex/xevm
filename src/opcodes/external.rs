@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::u256::U256;
 use crate::CallInfo;
 use crate::Context;
@@ -13,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         machine.stack.push(ctx.address()?);
         machine.pc += 1;
         Ok(())
@@ -29,7 +31,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.balance(addr)?);
         machine.pc += 1;
@@ -46,7 +48,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCallvalue {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         machine.stack.push(call_info.call_value);
         machine.pc += 1;
         Ok(())
@@ -62,7 +64,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
         machine: &mut Machine,
         _text: &[u8],
         call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         machine.stack.push(call_info.caller);
         machine.pc += 1;
         Ok(())
@@ -78,7 +80,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodesize {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         machine.stack.push(U256::from(text.len() as u64));
         machine.pc += 1;
         Ok(())
@@ -94,7 +96,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         unimplemented!();
         machine.pc += 1;
         Ok(())

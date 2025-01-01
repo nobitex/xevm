@@ -1,4 +1,6 @@
 use crate::CallInfo;
+use std::error::Error;
+
 use crate::Context;
 use crate::Machine;
 use crate::OpcodeHandler;
@@ -12,7 +14,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.transient.insert(addr, val);

@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::u256::U256;
 use crate::CallInfo;
 use crate::Context;
@@ -13,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeLt {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a < b) as u64));
@@ -31,7 +33,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeGt {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a > b) as u64));
@@ -49,7 +51,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeEq {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a == b) as u64));
@@ -67,7 +69,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeIszero {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         machine.stack.push(U256::from((a == U256::ZERO) as u64));
         machine.pc += 1;
@@ -84,7 +86,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShl {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a << b);
@@ -102,7 +104,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShr {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a >> b);
@@ -120,7 +122,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAnd {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a & b);
@@ -138,7 +140,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOr {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a | b);

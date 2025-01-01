@@ -1,9 +1,10 @@
-use anyhow::anyhow;
+use std::error::Error;
 
 use crate::CallInfo;
 use crate::Context;
 use crate::Machine;
 use crate::OpcodeHandler;
+use crate::XevmError;
 
 #[derive(Debug)]
 pub struct OpcodeReturn;
@@ -14,9 +15,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeReturn {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), Box<dyn Error>> {
         let offset = machine.pop_stack()?;
         let sz = machine.pop_stack()?;
-        Err(anyhow!("Returned!"))
+        Err(Box::new(XevmError::Other("Returned!".into())))
     }
 }
