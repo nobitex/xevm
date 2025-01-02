@@ -29,8 +29,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
 }
 
 #[derive(Debug)]
-pub struct OpcodeJumpdest;
-impl<C: Context> OpcodeHandler<C> for OpcodeJumpdest {
+pub struct OpcodeJumpDest;
+impl<C: Context> OpcodeHandler<C> for OpcodeJumpDest {
     fn call(
         &self,
         _ctx: &mut C,

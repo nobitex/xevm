@@ -15,16 +15,16 @@ mod swap;
 
 pub use add::OpcodeAdd;
 pub use cmp::{
-    OpcodeAnd, OpcodeEq, OpcodeGt, OpcodeIszero, OpcodeLt, OpcodeOr, OpcodeSgt, OpcodeShl,
+    OpcodeAnd, OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt, OpcodeOr, OpcodeSgt, OpcodeShl,
     OpcodeShr, OpcodeSlt,
 };
 pub use dup::OpcodeDup;
 pub use external::{
-    OpcodeAddress, OpcodeBalance, OpcodeCalldatacopy, OpcodeCalldataload, OpcodeCalldatasize,
-    OpcodeCaller, OpcodeCallvalue, OpcodeCodecopy, OpcodeCodesize,
+    OpcodeAddress, OpcodeBalance, OpcodeCalldataCopy, OpcodeCalldataLoad, OpcodeCalldataSize,
+    OpcodeCaller, OpcodeCallValue, OpcodeCodeCopy, OpcodeCodeSize,
 };
 pub use halt::OpcodeHalt;
-pub use jump::{OpcodeJump, OpcodeJumpdest, OpcodeJumpi};
+pub use jump::{OpcodeJump, OpcodeJumpDest, OpcodeJumpi};
 pub use memory::{
     OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
 };

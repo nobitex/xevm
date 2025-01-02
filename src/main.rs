@@ -93,7 +93,7 @@ impl Machine {
         opcode_table.insert(0x12, Box::new(OpcodeSlt));
         opcode_table.insert(0x13, Box::new(OpcodeSgt));
         opcode_table.insert(0x14, Box::new(OpcodeEq));
-        opcode_table.insert(0x15, Box::new(OpcodeIszero));
+        opcode_table.insert(0x15, Box::new(OpcodeIsZero));
         opcode_table.insert(0x16, Box::new(OpcodeAnd));
         opcode_table.insert(0x17, Box::new(OpcodeOr));
         /*opcode_table.insert(0x18, Box::new(OpcodeXor));
@@ -107,12 +107,12 @@ impl Machine {
         opcode_table.insert(0x31, Box::new(OpcodeBalance));
         /*opcode_table.insert(0x32, Box::new(OpcodeOrigin));*/
         opcode_table.insert(0x33, Box::new(OpcodeCaller));
-        opcode_table.insert(0x34, Box::new(OpcodeCallvalue));
-        opcode_table.insert(0x35, Box::new(OpcodeCalldataload));
-        opcode_table.insert(0x36, Box::new(OpcodeCalldatasize));
-        opcode_table.insert(0x37, Box::new(OpcodeCalldatacopy));
-        opcode_table.insert(0x38, Box::new(OpcodeCodesize));
-        opcode_table.insert(0x39, Box::new(OpcodeCodecopy));
+        opcode_table.insert(0x34, Box::new(OpcodeCallValue));
+        opcode_table.insert(0x35, Box::new(OpcodeCalldataLoad));
+        opcode_table.insert(0x36, Box::new(OpcodeCalldataSize));
+        opcode_table.insert(0x37, Box::new(OpcodeCalldataCopy));
+        opcode_table.insert(0x38, Box::new(OpcodeCodeSize));
+        opcode_table.insert(0x39, Box::new(OpcodeCodeCopy));
         /*opcode_table.insert(0x3a, Box::new(OpcodeGasprice));
         opcode_table.insert(0x3b, Box::new(OpcodeExtcodesize));
         opcode_table.insert(0x3c, Box::new(OpcodeExtcodecopy));
@@ -139,7 +139,7 @@ impl Machine {
         opcode_table.insert(0x55, Box::new(OpcodeSstore));
         opcode_table.insert(0x56, Box::new(OpcodeJump));
         opcode_table.insert(0x57, Box::new(OpcodeJumpi));
-        opcode_table.insert(0x5b, Box::new(OpcodeJumpdest));
+        opcode_table.insert(0x5b, Box::new(OpcodeJumpDest));
         opcode_table.insert(0x5c, Box::new(OpcodeTload));
         opcode_table.insert(0x5d, Box::new(OpcodeTstore));
         for sz in 0..=32 {

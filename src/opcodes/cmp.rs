@@ -61,8 +61,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeEq {
 }
 
 #[derive(Debug)]
-pub struct OpcodeIszero;
-impl<C: Context> OpcodeHandler<C> for OpcodeIszero {
+pub struct OpcodeIsZero;
+impl<C: Context> OpcodeHandler<C> for OpcodeIsZero {
     fn call(
         &self,
         _ctx: &mut C,

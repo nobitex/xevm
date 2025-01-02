@@ -40,8 +40,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCallvalue;
-impl<C: Context> OpcodeHandler<C> for OpcodeCallvalue {
+pub struct OpcodeCallValue;
+impl<C: Context> OpcodeHandler<C> for OpcodeCallValue {
     fn call(
         &self,
         _ctx: &mut C,
@@ -72,8 +72,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCodesize;
-impl<C: Context> OpcodeHandler<C> for OpcodeCodesize {
+pub struct OpcodeCodeSize;
+impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
     fn call(
         &self,
         _ctx: &mut C,
@@ -88,8 +88,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodesize {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCodecopy;
-impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
+pub struct OpcodeCodeCopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
     fn call(
         &self,
         _ctx: &mut C,
@@ -107,8 +107,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCalldatasize;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldatasize {
+pub struct OpcodeCalldataSize;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldataSize {
     fn call(
         &self,
         _ctx: &mut C,
@@ -125,8 +125,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatasize {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCalldatacopy;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
+pub struct OpcodeCalldataCopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
     fn call(
         &self,
         _ctx: &mut C,
@@ -144,8 +144,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
 }
 
 #[derive(Debug)]
-pub struct OpcodeCalldataload;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldataload {
+pub struct OpcodeCalldataLoad;
+impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
     fn call(
         &self,
         _ctx: &mut C,
