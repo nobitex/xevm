@@ -28,3 +28,40 @@ impl<C: Context> OpcodeHandler<C> for OpcodeDup {
         Ok(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::u256::U256;
+
+    use super::super::tests::test;
+    use super::*;
+
+    #[test]
+    fn test_opcode_dup() {
+        test(
+            OpcodeDup(0),
+            &[
+                (&[], None),
+                (
+                    &[U256::from(123)],
+                    Some(&[U256::from(123), U256::from(123)]),
+                ),
+                (
+                    &[U256::from(234), U256::from(123)],
+                    Some(&[U256::from(123), U256::from(234), U256::from(234)]),
+                ),
+            ],
+        );
+        test(
+            OpcodeDup(1),
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (
+                    &[U256::from(234), U256::from(123)],
+                    Some(&[U256::from(123), U256::from(234), U256::from(123)]),
+                ),
+            ],
+        );
+    }
+}
