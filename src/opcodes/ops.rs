@@ -180,7 +180,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeByte {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let i = machine.pop_stack()?.lower_usize();
+        let i = machine.pop_stack()?.as_usize()?;
         let x = machine.pop_stack()?.to_bytes_be();
         machine
             .stack

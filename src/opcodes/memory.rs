@@ -88,7 +88,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let addr = machine.pop_stack()?.lower_usize();
+        let addr = machine.pop_stack()?.as_usize()?;
         let val = machine.pop_stack()?.to_bytes_be();
         machine.mem_put(addr, &val);
         machine.pc += 1;
@@ -106,7 +106,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let addr = machine.pop_stack()?.lower_usize();
+        let addr = machine.pop_stack()?.as_usize()?;
         let mut ret = [0u8; 32];
         for i in 0..32 {
             ret[i] = machine.memory.get(addr + i).copied().unwrap_or_default();
@@ -127,8 +127,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let addr = machine.pop_stack()?.lower_usize();
-        let val = machine.pop_stack()?.lower_usize();
+        let addr = machine.pop_stack()?.as_usize()?;
+        let val = machine.pop_stack()?.as_usize()?;
         machine.mem_put(addr, &[val as u8]);
         machine.pc += 1;
         Ok(None)

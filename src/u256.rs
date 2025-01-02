@@ -3,6 +3,8 @@ use std::{
     ops::{Add, BitAnd, BitOr, BitXor, Mul, Neg, Not, Shl, Shr, Sub},
 };
 
+use crate::error::XevmError;
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct U256(pub u128, pub u128);
 
@@ -29,6 +31,12 @@ impl U256 {
     pub const MAX: Self = Self(u128::MAX, u128::MAX);
     pub fn shl128(&self) -> Self {
         Self(0, self.0)
+    }
+    pub fn as_usize(&self) -> Result<usize, XevmError> {
+        if self.1 != 0 || self.0 > usize::MAX as u128 {
+            return Err(XevmError::Other("Big number!".into()));
+        }
+        Ok(self.lower_usize())
     }
     pub fn lower_usize(&self) -> usize {
         self.0 as usize

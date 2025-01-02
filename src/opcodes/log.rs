@@ -15,8 +15,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeLog {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let offset = machine.pop_stack()?.lower_usize();
-        let size = machine.pop_stack()?.lower_usize();
+        let offset = machine.pop_stack()?.as_usize()?;
+        let size = machine.pop_stack()?.as_usize()?;
         let mut topics = Vec::new();
         for _ in 0..self.0 {
             topics.push(machine.pop_stack()?);

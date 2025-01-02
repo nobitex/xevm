@@ -16,7 +16,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
         text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let target = machine.pop_stack()?.lower_usize();
+        let target = machine.pop_stack()?.as_usize()?;
         if target >= text.len() {
             return Err(XevmError::Other("Jump higher than code length!".into()));
         }
@@ -53,7 +53,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let target = machine.pop_stack()?.lower_usize();
+        let target = machine.pop_stack()?.as_usize()?;
         let cond = machine.pop_stack()?;
         if target >= text.len() {
             return Err(XevmError::Other("Jump higher than code length!".into()));

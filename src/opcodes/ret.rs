@@ -15,8 +15,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeReturn {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        let offset = machine.pop_stack()?.lower_usize();
-        let sz = machine.pop_stack()?.lower_usize();
+        let offset = machine.pop_stack()?.as_usize()?;
+        let sz = machine.pop_stack()?.as_usize()?;
         let return_value = machine.memory[offset..offset + sz].to_vec();
         Ok(Some(ExecutionResult::Returned(return_value)))
     }
