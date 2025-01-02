@@ -76,3 +76,51 @@ impl<C: Context> OpcodeHandler<C> for OpcodeIsZero {
         Ok(None)
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeSlt;
+impl<C: Context> OpcodeHandler<C> for OpcodeSlt {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, XevmError> {
+        let a = machine.pop_stack()?;
+        let b = machine.pop_stack()?;
+        let res = match (a.is_neg(), b.is_neg()) {
+            (false, false) => a < b,
+            (false, true) => false,
+            (true, false) => true,
+            (true, true) => -a > -b,
+        };
+        machine.stack.push(U256::from(res as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeSgt;
+impl<C: Context> OpcodeHandler<C> for OpcodeSgt {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, XevmError> {
+        let a = machine.pop_stack()?;
+        let b = machine.pop_stack()?;
+        let res = match (a.is_neg(), b.is_neg()) {
+            (false, false) => a > b,
+            (false, true) => true,
+            (true, false) => false,
+            (true, true) => -a < -b,
+        };
+        machine.stack.push(U256::from(res as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}

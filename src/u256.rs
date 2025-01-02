@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Shl, Shr, Sub},
+    ops::{Add, BitAnd, BitOr, BitXor, Mul, Neg, Not, Shl, Shr, Sub},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -52,8 +52,17 @@ impl U256 {
         ret[16..32].copy_from_slice(&self.0.to_be_bytes());
         ret
     }
+    pub fn is_neg(&self) -> bool {
+        (self.1 >> 127) != 0
+    }
 }
 
+impl Neg for U256 {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        !self + Self::ONE
+    }
+}
 impl Add for U256 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {

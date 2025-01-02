@@ -171,42 +171,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeNot {
 }
 
 #[derive(Debug)]
-pub struct OpcodeSlt;
-impl<C: Context> OpcodeHandler<C> for OpcodeSlt {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-        _text: &[u8],
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(U256::from((a < b) as u64));
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeSgt;
-impl<C: Context> OpcodeHandler<C> for OpcodeSgt {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-        _text: &[u8],
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(U256::from((a > b) as u64));
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
 pub struct OpcodeByte;
 impl<C: Context> OpcodeHandler<C> for OpcodeByte {
     fn call(

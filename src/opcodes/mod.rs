@@ -11,7 +11,7 @@ mod ret;
 mod revert;
 mod swap;
 
-pub use cmp::{OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt};
+pub use cmp::{OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt, OpcodeSgt, OpcodeSlt};
 pub use dup::OpcodeDup;
 pub use external::{
     OpcodeAddress, OpcodeBalance, OpcodeCallValue, OpcodeCalldataCopy, OpcodeCalldataLoad,
@@ -23,8 +23,8 @@ pub use memory::{
     OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
 };
 pub use ops::{
-    OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeSgt, OpcodeShl,
-    OpcodeShr, OpcodeSlt, OpcodeSub, OpcodeXor,
+    OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeShl, OpcodeShr,
+    OpcodeSub, OpcodeXor,
 };
 pub use pop::OpcodePop;
 pub use push::OpcodePush;
