@@ -90,12 +90,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.lower_usize();
         let val = machine.pop_stack()?.to_bytes_be();
-        while machine.memory.len() < addr.wrapping_add(32) {
-            machine.memory.push(0);
-        }
-        for (i, v) in val.iter().enumerate() {
-            machine.memory[addr + i] = *v;
-        }
+        machine.mem_put(addr, &val);
         machine.pc += 1;
         Ok(None)
     }
@@ -134,10 +129,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.lower_usize();
         let val = machine.pop_stack()?.lower_usize();
-        while machine.memory.len() < addr {
-            machine.memory.push(0);
-        }
-        machine.memory.insert(addr, val as u8);
+        machine.mem_put(addr, &[val as u8]);
         machine.pc += 1;
         Ok(None)
     }

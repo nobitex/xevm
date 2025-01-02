@@ -100,12 +100,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodecopy {
         let dest_addr = machine.pop_stack()?.lower_usize();
         let addr = machine.pop_stack()?.lower_usize();
         let size = machine.pop_stack()?.lower_usize();
-        while machine.memory.len() < dest_addr.wrapping_add(size) {
-            machine.memory.push(0);
-        }
-        for i in 0..size {
-            machine.memory[dest_addr + i] = text[addr + i];
-        }
+        machine.mem_put(dest_addr, &text[addr..addr + size]);
         machine.pc += 1;
         Ok(None)
     }
@@ -142,12 +137,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldatacopy {
         let dest_addr = machine.pop_stack()?.lower_usize();
         let addr = machine.pop_stack()?.lower_usize();
         let size = machine.pop_stack()?.lower_usize();
-        while machine.memory.len() < dest_addr.wrapping_add(size) {
-            machine.memory.push(0);
-        }
-        for i in 0..size {
-            machine.memory[dest_addr + i] = call_info.calldata[addr + i];
-        }
+        machine.mem_put(dest_addr, &call_info.calldata[addr..addr + size]);
         machine.pc += 1;
         Ok(None)
     }

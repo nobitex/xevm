@@ -56,6 +56,13 @@ struct Machine {
 }
 
 impl Machine {
+    fn mem_put(&mut self, offset: usize, data: &[u8]) {
+        let expected_len = offset + data.len();
+        if expected_len > self.memory.len() {
+            self.memory.resize(expected_len, 0);
+        }
+        self.memory[offset..offset + data.len()].copy_from_slice(data);
+    }
     fn pop_stack(&mut self) -> Result<U256, XevmError> {
         Ok(self
             .stack
