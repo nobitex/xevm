@@ -83,10 +83,10 @@ impl Machine {
         opcode_table.insert(0x05, Box::new(OpcodeSdiv));
         opcode_table.insert(0x06, Box::new(OpcodeMod));
         opcode_table.insert(0x07, Box::new(OpcodeSmod));
-        opcode_table.insert(0x08, Box::new(OpcodeAddmod));
-        opcode_table.insert(0x09, Box::new(OpcodeMulmod));
+        opcode_table.insert(0x08, Box::new(OpcodeAddMod));
+        opcode_table.insert(0x09, Box::new(OpcodeMulMod));
         opcode_table.insert(0x0a, Box::new(OpcodeExp));
-        opcode_table.insert(0x0b, Box::new(OpcodeSignextend));*/
+        opcode_table.insert(0x0b, Box::new(OpcodeSignExtend));*/
 
         opcode_table.insert(0x10, Box::new(OpcodeLt));
         opcode_table.insert(0x11, Box::new(OpcodeGt));
@@ -113,23 +113,23 @@ impl Machine {
         opcode_table.insert(0x37, Box::new(OpcodeCalldataCopy));
         opcode_table.insert(0x38, Box::new(OpcodeCodeSize));
         opcode_table.insert(0x39, Box::new(OpcodeCodeCopy));
-        /*opcode_table.insert(0x3a, Box::new(OpcodeGasprice));
-        opcode_table.insert(0x3b, Box::new(OpcodeExtcodesize));
-        opcode_table.insert(0x3c, Box::new(OpcodeExtcodecopy));
-        opcode_table.insert(0x3d, Box::new(OpcodeReturndatasize));
-        opcode_table.insert(0x3e, Box::new(OpcodeReturndatacopy));
-        opcode_table.insert(0x3f, Box::new(OpcodeExtcodehash));
-        opcode_table.insert(0x40, Box::new(OpcodeBlockhash));
+        /*opcode_table.insert(0x3a, Box::new(OpcodeGasPrice));
+        opcode_table.insert(0x3b, Box::new(OpcodeExtCodeSize));
+        opcode_table.insert(0x3c, Box::new(OpcodeExtCodeCopy));
+        opcode_table.insert(0x3d, Box::new(OpcodeReturnDataSize));
+        opcode_table.insert(0x3e, Box::new(OpcodeReturnDataCopy));
+        opcode_table.insert(0x3f, Box::new(OpcodeExtCodeHash));
+        opcode_table.insert(0x40, Box::new(OpcodeBlockHash));
         opcode_table.insert(0x41, Box::new(OpcodeCoinbase));
         opcode_table.insert(0x42, Box::new(OpcodeTimestamp));
         opcode_table.insert(0x43, Box::new(OpcodeNumber));
-        opcode_table.insert(0x44, Box::new(OpcodePrevrandao));
-        opcode_table.insert(0x45, Box::new(OpcodeGaslimit));
-        opcode_table.insert(0x46, Box::new(OpcodeChainid));
-        opcode_table.insert(0x47, Box::new(OpcodeSelfbalance));
-        opcode_table.insert(0x48, Box::new(OpcodeBasefee));
-        opcode_table.insert(0x49, Box::new(OpcodeBlobhash));
-        opcode_table.insert(0x4a, Box::new(OpcodeBlobbasefee));*/
+        opcode_table.insert(0x44, Box::new(OpcodePrevRandao));
+        opcode_table.insert(0x45, Box::new(OpcodeGasLimit));
+        opcode_table.insert(0x46, Box::new(OpcodeChainId));
+        opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
+        opcode_table.insert(0x48, Box::new(OpcodeBaseFee));
+        opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
+        opcode_table.insert(0x4a, Box::new(OpcodeBlobBaseFee));*/
 
         opcode_table.insert(0x50, Box::new(OpcodePop));
         opcode_table.insert(0x51, Box::new(OpcodeMload));
@@ -151,8 +151,20 @@ impl Machine {
         for sz in 0..16 {
             opcode_table.insert(0x90 + sz, Box::new(OpcodeSwap(sz)));
         }
+
+        for sz in 0..5 {
+            opcode_table.insert(0xa0 + sz, Box::new(OpcodeLog(sz)));
+        }
+
+        //opcode_table.insert(0xf0, Box::new(OpcodeCreate));
+        //opcode_table.insert(0xf1, Box::new(OpcodeCall));
+        //opcode_table.insert(0xf2, Box::new(OpcodeCallCode));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
+        //opcode_table.insert(0xf2, Box::new(OpcodeDelegateCall));
+        //opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
+        //opcode_table.insert(0xfa, Box::new(OpcodeStaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
+        //opcode_table.insert(0xfa, Box::new(OpcodeSelfDestruct));
 
         while self.pc < self.code.len() {
             let opcode = self.code[self.pc];
@@ -198,6 +210,7 @@ trait Context {
     fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>>;
+    fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
 struct CallInfo {
@@ -223,6 +236,10 @@ impl Context for DummyContext {
     }
     fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
         self.mem.insert(address, value);
+        Ok(())
+    }
+    fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
+        println!("New log! {:?} {:?}", topics, data);
         Ok(())
     }
 }

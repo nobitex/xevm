@@ -3,6 +3,7 @@ mod dup;
 mod external;
 mod halt;
 mod jump;
+mod log;
 mod memory;
 mod ops;
 mod pop;
@@ -19,6 +20,7 @@ pub use external::{
 };
 pub use halt::OpcodeHalt;
 pub use jump::{OpcodeJump, OpcodeJumpDest, OpcodeJumpi};
+pub use log::OpcodeLog;
 pub use memory::{
     OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
 };
