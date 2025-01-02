@@ -5,7 +5,6 @@ use crate::ExecutionResult;
 use crate::Machine;
 use crate::OpcodeHandler;
 use crate::XevmError;
-use std::error::Error;
 
 #[derive(Debug)]
 pub struct OpcodePush(pub u8);
@@ -16,10 +15,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodePush {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, XevmError> {
         let ahead = &text[machine.pc + 1..];
         if ahead.len() < self.0 as usize {
-            return Err(Box::new(XevmError::Other("Not enough bytes!".into())));
+            return Err(XevmError::Other("Not enough bytes!".into()));
         }
 
         machine

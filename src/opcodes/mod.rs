@@ -20,8 +20,8 @@ pub use cmp::{
 };
 pub use dup::OpcodeDup;
 pub use external::{
-    OpcodeAddress, OpcodeBalance, OpcodeCalldatacopy, OpcodeCalldatasize, OpcodeCaller,
-    OpcodeCallvalue, OpcodeCodecopy, OpcodeCodesize, OpcodeCalldataload
+    OpcodeAddress, OpcodeBalance, OpcodeCalldatacopy, OpcodeCalldataload, OpcodeCalldatasize,
+    OpcodeCaller, OpcodeCallvalue, OpcodeCodecopy, OpcodeCodesize,
 };
 pub use halt::OpcodeHalt;
 pub use jump::{OpcodeJump, OpcodeJumpdest, OpcodeJumpi};

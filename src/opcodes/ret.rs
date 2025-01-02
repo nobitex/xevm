@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use crate::CallInfo;
 use crate::Context;
 use crate::ExecutionResult;
@@ -16,7 +14,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeReturn {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, XevmError> {
         let offset = machine.pop_stack()?.lower_usize();
         let sz = machine.pop_stack()?.lower_usize();
         let return_value = machine.memory[offset..offset + sz].to_vec();

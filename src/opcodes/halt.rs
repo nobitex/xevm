@@ -1,7 +1,6 @@
 use crate::CallInfo;
 use crate::ExecutionResult;
 use crate::XevmError;
-use std::error::Error;
 
 use crate::Context;
 use crate::Machine;
@@ -16,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeHalt {
         _machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, XevmError> {
         Ok(Some(ExecutionResult::Halted))
     }
 }

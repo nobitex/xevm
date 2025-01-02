@@ -1,6 +1,6 @@
 use crate::CallInfo;
 use crate::ExecutionResult;
-use std::error::Error;
+use crate::XevmError;
 
 use crate::Context;
 use crate::Machine;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodePop {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.pop_stack()?;
         machine.pc += 1;
         Ok(None)

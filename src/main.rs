@@ -12,31 +12,36 @@ enum ExecutionResult {
     Halted,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum XevmError {
-    Other(String),
+    UnknownOpcode(u8),
+    DidntFinish,
+    Other(Box<dyn Error>),
+}
+
+impl From<Box<dyn Error>> for XevmError {
+    fn from(value: Box<dyn Error>) -> Self {
+        Self::Other(value)
+    }
 }
 
 impl std::fmt::Display for XevmError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SuperError is here!")
+        write!(f, "{:?}", self)
     }
 }
 
 impl Error for XevmError {
     fn cause(&self) -> Option<&dyn Error> {
         match self {
-            XevmError::Other(_) => None,
-        }
-    }
-    fn description(&self) -> &str {
-        match self {
-            XevmError::Other(other) => &other,
+            XevmError::Other(parent) => Some(parent.as_ref()),
+            _ => None,
         }
     }
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            XevmError::Other(_) => None,
+            XevmError::Other(parent) => Some(parent.as_ref()),
+            _ => None,
         }
     }
 }
@@ -51,7 +56,7 @@ struct Machine {
 }
 
 impl Machine {
-    fn pop_stack(&mut self) -> Result<U256, Box<dyn Error>> {
+    fn pop_stack(&mut self) -> Result<U256, XevmError> {
         Ok(self
             .stack
             .pop()
@@ -66,7 +71,7 @@ trait OpcodeHandler<C: Context> {
         machine: &mut Machine,
         text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>>;
+    ) -> Result<Option<ExecutionResult>, XevmError>;
 }
 
 fn run<C: Context>(
@@ -74,7 +79,7 @@ fn run<C: Context>(
     machine: &mut Machine,
     code: &[u8],
     call_info: &CallInfo,
-) -> Result<ExecutionResult, Box<dyn Error>> {
+) -> Result<ExecutionResult, XevmError> {
     let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
     opcode_table.insert(0x00, Box::new(OpcodeHalt));
     opcode_table.insert(0x01, Box::new(OpcodeAdd));
@@ -164,13 +169,10 @@ fn run<C: Context>(
                 return Ok(res);
             }
         } else {
-            return Err(Box::new(XevmError::Other(format!(
-                "Unknown opcode 0x{:02x}!",
-                opcode
-            ))));
+            return Err(XevmError::UnknownOpcode(opcode));
         }
     }
-    Err(Box::new(XevmError::Other("Program didn't finish!".into())))
+    Err(XevmError::DidntFinish)
 }
 
 trait Context {

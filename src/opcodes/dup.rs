@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use crate::CallInfo;
 use crate::Context;
 use crate::ExecutionResult;
@@ -16,19 +14,15 @@ impl<C: Context> OpcodeHandler<C> for OpcodeDup {
         machine: &mut Machine,
         _text: &[u8],
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, Box<dyn Error>> {
+    ) -> Result<Option<ExecutionResult>, XevmError> {
         if self.0 as usize >= machine.stack.len() {
-            return Err(Box::new(XevmError::Other(
-                "Dup element doesn't exist!".into(),
-            )));
+            return Err(XevmError::Other("Dup element doesn't exist!".into()));
         }
         let elem = machine
             .stack
             .get(machine.stack.len() - 1 - self.0 as usize)
             .copied()
-            .ok_or(Box::new(XevmError::Other(
-                "Dup element doesn't exist!".into(),
-            )))?;
+            .ok_or(XevmError::Other("Dup element doesn't exist!".into()))?;
         machine.stack.push(elem);
         machine.pc += 1;
         Ok(None)
