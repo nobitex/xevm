@@ -1,10 +1,10 @@
+use super::ExecutionResult;
+use super::OpcodeHandler;
+use crate::error::XevmError;
+use crate::machine::CallInfo;
+use crate::machine::Context;
+use crate::machine::Machine;
 use crate::u256::U256;
-use crate::CallInfo;
-use crate::Context;
-use crate::ExecutionResult;
-use crate::Machine;
-use crate::OpcodeHandler;
-use crate::XevmError;
 
 #[derive(Debug)]
 pub struct OpcodeAddress;

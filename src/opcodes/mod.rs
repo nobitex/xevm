@@ -33,3 +33,25 @@ pub use push::OpcodePush;
 pub use ret::OpcodeReturn;
 pub use revert::OpcodeRevert;
 pub use swap::OpcodeSwap;
+
+use crate::{
+    error::XevmError,
+    machine::{CallInfo, Context, Machine},
+};
+
+#[derive(Debug, Clone)]
+pub enum ExecutionResult {
+    Reverted(Vec<u8>),
+    Returned(Vec<u8>),
+    Halted,
+}
+
+pub trait OpcodeHandler<C: Context> {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        text: &[u8],
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, XevmError>;
+}

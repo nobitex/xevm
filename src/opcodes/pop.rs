@@ -1,10 +1,10 @@
-use crate::CallInfo;
-use crate::ExecutionResult;
-use crate::XevmError;
+use super::ExecutionResult;
+use crate::error::XevmError;
+use crate::machine::CallInfo;
 
-use crate::Context;
-use crate::Machine;
-use crate::OpcodeHandler;
+use super::OpcodeHandler;
+use crate::machine::Context;
+use crate::machine::Machine;
 
 #[derive(Debug)]
 pub struct OpcodePop;
