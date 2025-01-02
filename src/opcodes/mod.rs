@@ -25,8 +25,8 @@ pub use memory::{
     OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
 };
 pub use ops::{
-    OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeShl, OpcodeShr,
-    OpcodeSub, OpcodeXor,
+    OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeSar, OpcodeShl,
+    OpcodeShr, OpcodeSub, OpcodeXor,
 };
 pub use pop::OpcodePop;
 pub use push::OpcodePush;

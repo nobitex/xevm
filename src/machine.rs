@@ -76,7 +76,7 @@ impl Machine {
         opcode_table.insert(0x1a, Box::new(OpcodeByte));
         opcode_table.insert(0x1b, Box::new(OpcodeShl));
         opcode_table.insert(0x1c, Box::new(OpcodeShr));
-        /*opcode_table.insert(0x1d, Box::new(OpcodeSar));*/
+        opcode_table.insert(0x1d, Box::new(OpcodeSar));
 
         opcode_table.insert(0x30, Box::new(OpcodeAddress));
         opcode_table.insert(0x31, Box::new(OpcodeBalance));
