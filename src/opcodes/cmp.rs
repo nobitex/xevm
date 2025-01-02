@@ -124,3 +124,100 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSgt {
         Ok(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::tests::test;
+    use super::*;
+
+    #[test]
+    fn test_opcode_lt() {
+        test(
+            OpcodeLt,
+            &[
+                (&[U256::from(123), U256::from(120)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(234)], &[U256::ONE]),
+                (&[U256::MAX, U256::MAX - U256::from(123)], &[U256::ZERO]),
+                (&[U256::MAX, U256::MAX], &[U256::ZERO]),
+                (&[U256::MAX - U256::from(123), U256::MAX], &[U256::ONE]),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_gt() {
+        test(
+            OpcodeGt,
+            &[
+                (&[U256::from(123), U256::from(120)], &[U256::ONE]),
+                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(234)], &[U256::ZERO]),
+                (&[U256::MAX, U256::MAX - U256::from(123)], &[U256::ONE]),
+                (&[U256::MAX, U256::MAX], &[U256::ZERO]),
+                (&[U256::MAX - U256::from(123), U256::MAX], &[U256::ZERO]),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_slt() {
+        test(
+            OpcodeSlt,
+            &[
+                (&[U256::from(123), U256::from(120)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(234)], &[U256::ONE]),
+                (&[-U256::from(123), U256::from(123)], &[U256::ONE]),
+                (&[U256::from(123), -U256::from(123)], &[U256::ZERO]),
+                (&[-U256::from(123), -U256::from(123)], &[U256::ZERO]),
+                (&[-U256::from(123), -U256::from(234)], &[U256::ZERO]),
+                (&[-U256::from(234), -U256::from(123)], &[U256::ONE]),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_sgt() {
+        test(
+            OpcodeSgt,
+            &[
+                (&[U256::from(123), U256::from(120)], &[U256::ONE]),
+                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
+                (&[U256::from(123), U256::from(234)], &[U256::ZERO]),
+                (&[-U256::from(123), U256::from(123)], &[U256::ZERO]),
+                (&[U256::from(123), -U256::from(123)], &[U256::ONE]),
+                (&[-U256::from(123), -U256::from(123)], &[U256::ZERO]),
+                (&[-U256::from(123), -U256::from(234)], &[U256::ONE]),
+                (&[-U256::from(234), -U256::from(123)], &[U256::ZERO]),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_eq() {
+        test(
+            OpcodeEq,
+            &[
+                (&[U256::from(0), U256::from(0)], &[U256::ONE]),
+                (&[U256::from(123), U256::from(123)], &[U256::ONE]),
+                (&[U256::from(123), U256::from(122)], &[U256::ZERO]),
+                (&[U256::MAX, U256::MAX], &[U256::ONE]),
+                (&[U256::MAX, U256::MAX - U256::ONE], &[U256::ZERO]),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_is_zero() {
+        test(
+            OpcodeIsZero,
+            &[
+                (&[U256::from(0)], &[U256::ONE]),
+                (&[U256::from(123)], &[U256::ZERO]),
+                (&[U256::MAX], &[U256::ZERO]),
+                (&[U256::MAX - U256::ONE], &[U256::ZERO]),
+            ],
+        );
+    }
+}

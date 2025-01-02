@@ -13,6 +13,7 @@ pub trait Context {
     fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct CallInfo {
     pub origin: U256,
     pub caller: U256,

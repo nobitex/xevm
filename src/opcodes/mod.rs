@@ -55,3 +55,49 @@ pub trait OpcodeHandler<C: Context> {
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError>;
 }
+
+#[cfg(test)]
+mod tests {
+    use std::error::Error;
+
+    use crate::u256::U256;
+
+    use super::*;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct TestContext;
+    impl Context for TestContext {
+        fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn address(&self) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn sload(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn sstore(&mut self, _address: U256, _value: U256) -> Result<(), Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn log(&self, _topics: Vec<U256>, _data: Vec<u8>) -> Result<(), Box<dyn Error>> {
+            unimplemented!()
+        }
+    }
+
+    pub fn test<O: OpcodeHandler<TestContext>>(
+        opcode_handler: O,
+        testcases: &[(&[U256], &[U256])],
+    ) {
+        for (inp, expected_out) in testcases {
+            let mut ctx = TestContext;
+            let mut machine = Machine::new(vec![]);
+            let mut inp_reversed = inp.to_vec();
+            inp_reversed.reverse();
+            machine.stack.extend(inp_reversed);
+            opcode_handler
+                .call(&mut ctx, &mut machine, &[], &CallInfo::default())
+                .unwrap();
+            assert_eq!(&machine.stack, expected_out);
+        }
+    }
+}
