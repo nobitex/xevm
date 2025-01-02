@@ -48,7 +48,7 @@ mod tests {
                 ),
                 (
                     &[U256::from(234), U256::from(123)],
-                    Some(&[U256::from(123), U256::from(234), U256::from(234)]),
+                    Some(&[U256::from(234), U256::from(234), U256::from(123)]),
                 ),
             ],
         );

@@ -97,7 +97,9 @@ mod tests {
             let res = opcode_handler.call(&mut ctx, &mut machine, &[], &CallInfo::default());
             if let Some(expected) = expected_out {
                 assert!(res.is_ok());
-                assert_eq!(&machine.stack, expected);
+                let mut out_reversed = expected.to_vec();
+                out_reversed.reverse();
+                assert_eq!(&machine.stack, &out_reversed);
             } else {
                 assert!(res.is_err());
             }

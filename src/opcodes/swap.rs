@@ -15,19 +15,54 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
         _text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
+        let a = machine.pop_stack()?;
         let stack_len = machine.stack.len();
         if self.0 as usize >= stack_len {
             return Err(XevmError::Other("Swap element doesn't exist!".into()));
         }
-        let b = machine.pop_stack()?;
-        let a = machine
+        let b = machine
             .stack
-            .get_mut(stack_len - 2 - self.0 as usize)
+            .get_mut(stack_len - 1 - self.0 as usize)
             .ok_or(XevmError::Other("Swap element doesn't exist!".into()))?;
-        let a_val = *a;
-        *a = b;
-        machine.stack.push(a_val);
+        let b_val = *b;
+        *b = a;
+        machine.stack.push(b_val);
         machine.pc += 1;
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::u256::U256;
+
+    use super::super::tests::test;
+    use super::*;
+
+    #[test]
+    fn test_opcode_swap() {
+        test(
+            OpcodeSwap(0),
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (
+                    &[U256::from(234), U256::from(123)],
+                    Some(&[U256::from(123), U256::from(234)]),
+                ),
+            ],
+        );
+        test(
+            OpcodeSwap(1),
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(234), U256::from(123)], None),
+                (
+                    &[U256::from(345), U256::from(234), U256::from(123)],
+                    Some(&[U256::from(123), U256::from(234), U256::from(345)]),
+                ),
+            ],
+        );
     }
 }
