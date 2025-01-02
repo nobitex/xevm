@@ -1,4 +1,4 @@
-name: Xevm
+name: xevm
 
 on:
   push:
