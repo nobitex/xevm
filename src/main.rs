@@ -1,12 +1,7 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
-mod u256;
-use u256::U256;
-mod opcodes;
-use opcodes::*;
-mod machine;
-use machine::{CallInfo, Context, Machine};
-mod error;
+use xevm::machine::{CallInfo, Context, Machine};
+use xevm::u256::U256;
 
 fn parse_hex(s: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut ret = Vec::new();
@@ -21,7 +16,7 @@ pub struct DummyContext {
     mem: HashMap<U256, U256>,
 }
 impl Context for DummyContext {
-    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>> {
+    fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ONE)
     }
     fn address(&self) -> Result<U256, Box<dyn Error>> {

@@ -3,7 +3,7 @@ use std::error::Error;
 
 use crate::error::XevmError;
 use crate::opcodes::*;
-use crate::{u256::U256, ExecutionResult, OpcodeHandler};
+use crate::u256::U256;
 
 pub trait Context {
     fn address(&self) -> Result<U256, Box<dyn Error>>;
