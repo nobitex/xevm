@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Add, BitAnd, BitOr, Mul, Shl, Shr, Sub},
+    ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Shl, Shr, Sub},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -70,6 +70,12 @@ impl Sub for U256 {
         U256(l0, l1)
     }
 }
+impl Not for U256 {
+    type Output = Self;
+    fn not(self) -> Self::Output {
+        U256(!self.0, !self.1)
+    }
+}
 
 fn mul_u128(a: u128, b: u128) -> U256 {
     let a_lo = (a as u64) as u128;
@@ -113,6 +119,13 @@ impl BitOr for U256 {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
         Self(self.0 | rhs.0, self.1 | rhs.1)
+    }
+}
+
+impl BitXor for U256 {
+    type Output = Self;
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self(self.0 ^ rhs.0, self.1 ^ rhs.1)
     }
 }
 

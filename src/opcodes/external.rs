@@ -72,6 +72,22 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
 }
 
 #[derive(Debug)]
+pub struct OpcodeOrigin;
+impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _text: &[u8],
+        call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, XevmError> {
+        machine.stack.push(call_info.origin);
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
 pub struct OpcodeCodeSize;
 impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
     fn call(
