@@ -86,7 +86,7 @@ mod tests {
 
     pub fn test<O: OpcodeHandler<TestContext>>(
         opcode_handler: O,
-        testcases: &[(&[U256], &[U256])],
+        testcases: &[(&[U256], Option<&[U256]>)],
     ) {
         for (inp, expected_out) in testcases {
             let mut ctx = TestContext;
@@ -94,10 +94,13 @@ mod tests {
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);
-            opcode_handler
-                .call(&mut ctx, &mut machine, &[], &CallInfo::default())
-                .unwrap();
-            assert_eq!(&machine.stack, expected_out);
+            let res = opcode_handler.call(&mut ctx, &mut machine, &[], &CallInfo::default());
+            if let Some(expected) = expected_out {
+                assert!(res.is_ok());
+                assert_eq!(&machine.stack, expected);
+            } else {
+                assert!(res.is_err());
+            }
         }
     }
 }

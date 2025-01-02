@@ -135,12 +135,20 @@ mod tests {
         test(
             OpcodeLt,
             &[
-                (&[U256::from(123), U256::from(120)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(234)], &[U256::ONE]),
-                (&[U256::MAX, U256::MAX - U256::from(123)], &[U256::ZERO]),
-                (&[U256::MAX, U256::MAX], &[U256::ZERO]),
-                (&[U256::MAX - U256::from(123), U256::MAX], &[U256::ONE]),
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
+                (
+                    &[U256::MAX, U256::MAX - U256::from(123)],
+                    Some(&[U256::ZERO]),
+                ),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
+                (
+                    &[U256::MAX - U256::from(123), U256::MAX],
+                    Some(&[U256::ONE]),
+                ),
             ],
         );
     }
@@ -150,12 +158,20 @@ mod tests {
         test(
             OpcodeGt,
             &[
-                (&[U256::from(123), U256::from(120)], &[U256::ONE]),
-                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(234)], &[U256::ZERO]),
-                (&[U256::MAX, U256::MAX - U256::from(123)], &[U256::ONE]),
-                (&[U256::MAX, U256::MAX], &[U256::ZERO]),
-                (&[U256::MAX - U256::from(123), U256::MAX], &[U256::ZERO]),
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
+                (
+                    &[U256::MAX, U256::MAX - U256::from(123)],
+                    Some(&[U256::ONE]),
+                ),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
+                (
+                    &[U256::MAX - U256::from(123), U256::MAX],
+                    Some(&[U256::ZERO]),
+                ),
             ],
         );
     }
@@ -165,14 +181,16 @@ mod tests {
         test(
             OpcodeSlt,
             &[
-                (&[U256::from(123), U256::from(120)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(234)], &[U256::ONE]),
-                (&[-U256::from(123), U256::from(123)], &[U256::ONE]),
-                (&[U256::from(123), -U256::from(123)], &[U256::ZERO]),
-                (&[-U256::from(123), -U256::from(123)], &[U256::ZERO]),
-                (&[-U256::from(123), -U256::from(234)], &[U256::ZERO]),
-                (&[-U256::from(234), -U256::from(123)], &[U256::ONE]),
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::ONE])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ZERO])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ONE])),
             ],
         );
     }
@@ -182,14 +200,16 @@ mod tests {
         test(
             OpcodeSgt,
             &[
-                (&[U256::from(123), U256::from(120)], &[U256::ONE]),
-                (&[U256::from(123), U256::from(123)], &[U256::ZERO]),
-                (&[U256::from(123), U256::from(234)], &[U256::ZERO]),
-                (&[-U256::from(123), U256::from(123)], &[U256::ZERO]),
-                (&[U256::from(123), -U256::from(123)], &[U256::ONE]),
-                (&[-U256::from(123), -U256::from(123)], &[U256::ZERO]),
-                (&[-U256::from(123), -U256::from(234)], &[U256::ONE]),
-                (&[-U256::from(234), -U256::from(123)], &[U256::ZERO]),
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::ONE])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ONE])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ZERO])),
             ],
         );
     }
@@ -199,11 +219,13 @@ mod tests {
         test(
             OpcodeEq,
             &[
-                (&[U256::from(0), U256::from(0)], &[U256::ONE]),
-                (&[U256::from(123), U256::from(123)], &[U256::ONE]),
-                (&[U256::from(123), U256::from(122)], &[U256::ZERO]),
-                (&[U256::MAX, U256::MAX], &[U256::ONE]),
-                (&[U256::MAX, U256::MAX - U256::ONE], &[U256::ZERO]),
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(0), U256::from(0)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(122)], Some(&[U256::ZERO])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ONE])),
+                (&[U256::MAX, U256::MAX - U256::ONE], Some(&[U256::ZERO])),
             ],
         );
     }
@@ -213,10 +235,11 @@ mod tests {
         test(
             OpcodeIsZero,
             &[
-                (&[U256::from(0)], &[U256::ONE]),
-                (&[U256::from(123)], &[U256::ZERO]),
-                (&[U256::MAX], &[U256::ZERO]),
-                (&[U256::MAX - U256::ONE], &[U256::ZERO]),
+                (&[], None),
+                (&[U256::from(0)], Some(&[U256::ONE])),
+                (&[U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::MAX], Some(&[U256::ZERO])),
+                (&[U256::MAX - U256::ONE], Some(&[U256::ZERO])),
             ],
         );
     }
