@@ -12,7 +12,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeRevert {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let offset = machine.pop_stack()?.as_usize()?;

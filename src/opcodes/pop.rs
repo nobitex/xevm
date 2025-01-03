@@ -13,7 +13,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodePop {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.pop_stack()?;

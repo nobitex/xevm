@@ -13,7 +13,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.stack.push(ctx.address()?);
@@ -29,7 +29,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?;
@@ -46,7 +46,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCallValue {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.stack.push(call_info.call_value);
@@ -62,7 +62,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.stack.push(call_info.caller);
@@ -78,7 +78,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine.stack.push(call_info.origin);
@@ -94,10 +94,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
-        machine.stack.push(U256::from(text.len() as u64));
+        machine.stack.push(U256::from(machine.code.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -110,13 +109,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let dest_addr = machine.pop_stack()?.as_usize()?;
         let addr = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
-        machine.mem_put(dest_addr, &text[addr..addr + size]);
+        let code = machine.code[addr..addr + size].to_vec();
+        machine.mem_put(dest_addr, &code);
         machine.pc += 1;
         Ok(None)
     }
@@ -129,7 +128,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataSize {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         machine
@@ -147,7 +146,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let dest_addr = machine.pop_stack()?.as_usize()?;
@@ -166,7 +165,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let offset = machine.pop_stack()?.as_usize()?;

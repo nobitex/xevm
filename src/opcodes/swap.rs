@@ -12,7 +12,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;

@@ -12,7 +12,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeDup {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         if self.0 as usize >= machine.stack.len() {

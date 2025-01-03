@@ -13,7 +13,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAdd {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -32,7 +32,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSub {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -51,7 +51,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMul {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -70,7 +70,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShl {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let shift = machine.pop_stack()?;
@@ -88,7 +88,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShr {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let shift = machine.pop_stack()?;
@@ -106,7 +106,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSar {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let shift = machine.pop_stack()?;
@@ -129,7 +129,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAnd {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -147,7 +147,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOr {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -165,7 +165,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeXor {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -183,7 +183,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeNot {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let a = machine.pop_stack()?;
@@ -200,7 +200,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeByte {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let i = machine.pop_stack()?.as_usize()?;

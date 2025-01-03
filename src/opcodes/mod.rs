@@ -51,7 +51,6 @@ pub trait OpcodeHandler<C: Context> {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-        text: &[u8],
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError>;
 }
@@ -94,7 +93,7 @@ mod tests {
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);
-            let res = opcode_handler.call(&mut ctx, &mut machine, &[], &CallInfo::default());
+            let res = opcode_handler.call(&mut ctx, &mut machine, &CallInfo::default());
             if let Some(expected) = expected_out {
                 assert!(res.is_ok());
                 let mut out_reversed = expected.to_vec();

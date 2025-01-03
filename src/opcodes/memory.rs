@@ -13,7 +13,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSstore {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?;
@@ -31,7 +31,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSload {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?;
@@ -48,7 +48,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?;
@@ -66,7 +66,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTload {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?;
@@ -85,7 +85,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.as_usize()?;
@@ -103,7 +103,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.as_usize()?;
@@ -124,7 +124,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.as_usize()?;

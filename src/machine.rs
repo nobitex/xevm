@@ -47,7 +47,6 @@ impl Machine {
         ctx: &mut C,
         call_info: &CallInfo,
     ) -> Result<ExecutionResult, XevmError> {
-        let code = self.code.clone();
         let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
         opcode_table.insert(0x00, Box::new(OpcodeHalt));
         opcode_table.insert(0x01, Box::new(OpcodeAdd));
@@ -145,7 +144,7 @@ impl Machine {
             let opcode = self.code[self.pc];
             //println!("0x{:x}", opcode);
             if let Some(opcode_fn) = opcode_table.get(&opcode) {
-                if let Some(res) = opcode_fn.call(ctx, &mut self, &code, call_info)? {
+                if let Some(res) = opcode_fn.call(ctx, &mut self, call_info)? {
                     return Ok(res);
                 }
             } else {

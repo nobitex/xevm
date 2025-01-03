@@ -13,7 +13,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeHalt {
         &self,
         _ctx: &mut C,
         _machine: &mut Machine,
-        _text: &[u8],
+
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         Ok(Some(ExecutionResult::Halted))
