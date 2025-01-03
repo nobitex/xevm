@@ -1,4 +1,6 @@
+mod call;
 mod cmp;
+mod create;
 mod dup;
 mod external;
 mod halt;
@@ -12,7 +14,9 @@ mod ret;
 mod revert;
 mod swap;
 
+pub use call::OpcodeCall;
 pub use cmp::{OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt, OpcodeSgt, OpcodeSlt};
+pub use create::{OpcodeCreate, OpcodeCreate2};
 pub use dup::OpcodeDup;
 pub use external::{
     OpcodeAddress, OpcodeBalance, OpcodeCallValue, OpcodeCalldataCopy, OpcodeCalldataLoad,
@@ -66,6 +70,26 @@ mod tests {
     #[derive(Clone, Debug, Default)]
     pub struct TestContext;
     impl Context for TestContext {
+        fn create(&mut self, _value: U256, _code: Vec<u8>) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn create2(
+            &mut self,
+            _value: U256,
+            _code: Vec<u8>,
+            _salt: U256,
+        ) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn call(
+            &mut self,
+            _gas: U256,
+            _address: U256,
+            _value: U256,
+            _args: Vec<u8>,
+        ) -> Result<ExecutionResult, Box<dyn Error>> {
+            unimplemented!()
+        }
         fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
             unimplemented!()
         }

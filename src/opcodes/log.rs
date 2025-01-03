@@ -21,7 +21,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeLog {
         for _ in 0..self.0 {
             topics.push(machine.pop_stack()?);
         }
-        let data = machine.memory[offset..offset + size].to_vec();
+        let data = machine.mem_get(offset, size);
         ctx.log(topics, data)?;
         machine.pc += 1;
         Ok(None)

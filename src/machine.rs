@@ -6,6 +6,15 @@ use crate::opcodes::*;
 use crate::u256::U256;
 
 pub trait Context {
+    fn create(&mut self, value: U256, code: Vec<u8>) -> Result<U256, Box<dyn Error>>;
+    fn create2(&mut self, value: U256, code: Vec<u8>, salt: U256) -> Result<U256, Box<dyn Error>>;
+    fn call(
+        &mut self,
+        gas: U256,
+        address: U256,
+        value: U256,
+        args: Vec<u8>,
+    ) -> Result<ExecutionResult, Box<dyn Error>>;
     fn address(&self) -> Result<U256, Box<dyn Error>>;
     fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
@@ -130,12 +139,12 @@ impl Machine {
             opcode_table.insert(0xa0 + sz, Box::new(OpcodeLog(sz)));
         }
 
-        //opcode_table.insert(0xf0, Box::new(OpcodeCreate));
-        //opcode_table.insert(0xf1, Box::new(OpcodeCall));
+        opcode_table.insert(0xf0, Box::new(OpcodeCreate));
+        opcode_table.insert(0xf1, Box::new(OpcodeCall));
         //opcode_table.insert(0xf2, Box::new(OpcodeCallCode));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
         //opcode_table.insert(0xf2, Box::new(OpcodeDelegateCall));
-        //opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
+        opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
         //opcode_table.insert(0xfa, Box::new(OpcodeStaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
         //opcode_table.insert(0xfa, Box::new(OpcodeSelfDestruct));
@@ -160,6 +169,12 @@ impl Machine {
             self.memory.resize(expected_len, 0);
         }
         self.memory[offset..offset + data.len()].copy_from_slice(data);
+    }
+    pub fn mem_get(&mut self, offset: usize, size: usize) -> Vec<u8> {
+        let mut ret = vec![0u8; size];
+        let sz = std::cmp::min(self.memory.len().saturating_sub(offset), size);
+        ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
+        ret
     }
     pub fn pop_stack(&mut self) -> Result<U256, XevmError> {
         Ok(self

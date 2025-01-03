@@ -107,10 +107,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let addr = machine.pop_stack()?.as_usize()?;
-        let mut ret = [0u8; 32];
-        for i in 0..32 {
-            ret[i] = machine.memory.get(addr + i).copied().unwrap_or_default();
-        }
+        let ret = machine.mem_get(addr, 32);
         machine.stack.push(U256::from_bytes_be(&ret));
         machine.pc += 1;
         Ok(None)

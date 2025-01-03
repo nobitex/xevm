@@ -16,8 +16,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeRevert {
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, XevmError> {
         let offset = machine.pop_stack()?.as_usize()?;
-        let sz = machine.pop_stack()?.as_usize()?;
-        let revert_value = machine.memory[offset..offset + sz].to_vec();
+        let size = machine.pop_stack()?.as_usize()?;
+        let revert_value = machine.mem_get(offset, size);
         Ok(Some(ExecutionResult::Reverted(revert_value)))
     }
 }

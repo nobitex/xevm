@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
 use xevm::machine::{CallInfo, Context, Machine};
+use xevm::opcodes::ExecutionResult;
 use xevm::u256::U256;
 
 fn parse_hex(s: &str) -> Result<Vec<u8>, Box<dyn Error>> {
@@ -12,10 +13,44 @@ fn parse_hex(s: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 }
 
 #[derive(Clone, Debug, Default)]
+pub struct Account {
+    value: U256,
+    code: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Default)]
 pub struct DummyContext {
+    contracts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
 impl Context for DummyContext {
+    fn create(&mut self, value: U256, code: Vec<u8>) -> Result<U256, Box<dyn Error>> {
+        Ok(U256::ZERO)
+    }
+    fn create2(&mut self, value: U256, code: Vec<u8>, salt: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(U256::ZERO)
+    }
+    fn call(
+        &mut self,
+        _gas: U256,
+        address: U256,
+        value: U256,
+        args: Vec<u8>,
+    ) -> Result<ExecutionResult, Box<dyn Error>> {
+        let contract = self.contracts.entry(address).or_default();
+        contract.value = contract.value + value;
+        let machine = Machine::new(contract.code.clone());
+        let exec_result = machine.run(
+            self,
+            &CallInfo {
+                call_value: value,
+                origin: address,
+                caller: address,
+                calldata: args,
+            },
+        )?;
+        Ok(exec_result)
+    }
     fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ONE)
     }
