@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
+use xevm::keccak::keccak;
 use xevm::machine::{CallInfo, Context, Machine};
 use xevm::opcodes::ExecutionResult;
 use xevm::u256::U256;
