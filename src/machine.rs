@@ -127,6 +127,7 @@ impl Machine {
         opcode_table.insert(0x5b, Box::new(OpcodeJumpDest));
         opcode_table.insert(0x5c, Box::new(OpcodeTload));
         opcode_table.insert(0x5d, Box::new(OpcodeTstore));
+        opcode_table.insert(0x5e, Box::new(OpcodeMcopy));
         for sz in 0..=32 {
             opcode_table.insert(0x5f + sz, Box::new(OpcodePush(sz)));
         }

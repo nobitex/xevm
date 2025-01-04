@@ -131,3 +131,23 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         Ok(None)
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeMcopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeMcopy {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let dest_offset = machine.pop_stack()?.as_usize()?;
+        let offset = machine.pop_stack()?.as_usize()?;
+        let size = machine.pop_stack()?.as_usize()?;
+        let data = machine.mem_get(offset, size);
+        machine.mem_put(dest_offset, &data);
+        machine.pc += 1;
+        Ok(None)
+    }
+}

@@ -28,7 +28,8 @@ pub use jump::{OpcodeJump, OpcodeJumpDest, OpcodeJumpi};
 pub use keccak::OpcodeKeccak;
 pub use log::OpcodeLog;
 pub use memory::{
-    OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload, OpcodeTstore,
+    OpcodeMcopy, OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload,
+    OpcodeTstore,
 };
 pub use ops::{
     OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeSar, OpcodeShl,
