@@ -105,16 +105,12 @@ mod tests {
         fn call(
             &mut self,
             _gas: U256,
-            _address: U256,
-            _value: U256,
-            _args: Vec<u8>,
+            address: U256,
+            call_info: CallInfo,
         ) -> Result<ExecutionResult, ExecError> {
             unimplemented!()
         }
         fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn address(&self) -> Result<U256, Box<dyn Error>> {
             unimplemented!()
         }
         fn sload(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
@@ -134,7 +130,7 @@ mod tests {
     ) {
         for (inp, expected_out) in testcases {
             let mut ctx = TestContext;
-            let mut machine = Machine::new(vec![]);
+            let mut machine = Machine::new(U256::ZERO, vec![]);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

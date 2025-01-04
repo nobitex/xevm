@@ -13,10 +13,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
         &self,
         ctx: &mut C,
         machine: &mut Machine,
-
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(ctx.address()?);
+        machine.stack.push(machine.address);
         machine.pc += 1;
         Ok(None)
     }
@@ -78,7 +77,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.origin);

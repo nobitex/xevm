@@ -10,12 +10,10 @@ pub trait Context {
     fn create2(&mut self, value: U256, code: Vec<u8>, salt: U256) -> Result<U256, Box<dyn Error>>;
     fn call(
         &mut self,
-        gas: U256,
+        _gas: U256,
         address: U256,
-        value: U256,
-        args: Vec<u8>,
+        call_info: CallInfo,
     ) -> Result<ExecutionResult, ExecError>;
-    fn address(&self) -> Result<U256, Box<dyn Error>>;
     fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>>;
@@ -32,6 +30,7 @@ pub struct CallInfo {
 
 #[derive(Debug, Clone, Default)]
 pub struct Machine {
+    pub address: U256,
     pub code: Vec<u8>,
     pub pc: usize,
     pub gas_used: usize,
@@ -41,8 +40,9 @@ pub struct Machine {
 }
 
 impl Machine {
-    pub fn new(code: Vec<u8>) -> Self {
+    pub fn new(address: U256, code: Vec<u8>) -> Self {
         Self {
+            address,
             code,
             pc: 0,
             gas_used: 0,
@@ -143,12 +143,12 @@ impl Machine {
         }
 
         opcode_table.insert(0xf0, Box::new(OpcodeCreate));
-        opcode_table.insert(0xf1, Box::new(OpcodeCall));
+        opcode_table.insert(0xf1, Box::new(OpcodeCall::Call));
         //opcode_table.insert(0xf2, Box::new(OpcodeCallCode));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
-        //opcode_table.insert(0xf2, Box::new(OpcodeDelegateCall));
+        opcode_table.insert(0xf2, Box::new(OpcodeCall::DelegateCall));
         opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
-        //opcode_table.insert(0xfa, Box::new(OpcodeStaticCall));
+        opcode_table.insert(0xfa, Box::new(OpcodeCall::StaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
         //opcode_table.insert(0xfa, Box::new(OpcodeSelfDestruct));
 

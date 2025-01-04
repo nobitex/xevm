@@ -35,27 +35,15 @@ impl Context for DummyContext {
         &mut self,
         _gas: U256,
         address: U256,
-        value: U256,
-        args: Vec<u8>,
+        call_info: CallInfo,
     ) -> Result<ExecutionResult, ExecError> {
         let contract = self.contracts.entry(address).or_default();
-        contract.value = contract.value + value;
-        let machine = Machine::new(contract.code.clone());
-        let exec_result = machine.run(
-            self,
-            &CallInfo {
-                call_value: value,
-                origin: address,
-                caller: address,
-                calldata: args,
-            },
-        )?;
+        contract.value = contract.value + call_info.call_value;
+        let machine = Machine::new(address, contract.code.clone());
+        let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
     }
     fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
-        Ok(U256::ONE)
-    }
-    fn address(&self) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ONE)
     }
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>> {
@@ -80,15 +68,15 @@ fn main() {
         caller: U256::ZERO,
         calldata: vec![0xd0, 0x9d, 0xe0, 0x8a],
     };
-    let res = Machine::new(code.clone())
+    let res = Machine::new(U256::ZERO, code.clone())
         .run(&mut ctx, &call_info)
         .unwrap();
     println!("{:?}", res);
-    let res = Machine::new(code.clone())
+    let res = Machine::new(U256::ZERO, code.clone())
         .run(&mut ctx, &call_info)
         .unwrap();
     println!("{:?}", res);
-    let res = Machine::new(code.clone())
+    let res = Machine::new(U256::ZERO, code.clone())
         .run(&mut ctx, &call_info)
         .unwrap();
     println!("{:?}", res);
@@ -103,7 +91,7 @@ fn main() {
             0x77, 0x77, 0x77, 0x77, 0x77, 0x77, 0x77, 0x7f,
         ],
     };
-    let res = Machine::new(code.clone())
+    let res = Machine::new(U256::ZERO, code.clone())
         .run(&mut ctx, &call_info)
         .unwrap();
     println!("{:?}", res);
