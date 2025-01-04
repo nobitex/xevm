@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 sha3 = "0.10.8"
+axum = "0.8.1"
+tokio = { version = "1.42.0", features = ["rt-multi-thread"] }
