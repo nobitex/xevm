@@ -60,6 +60,25 @@ pub trait OpcodeHandler<C: Context> {
     ) -> Result<Option<ExecutionResult>, ExecError>;
 }
 
+#[derive(Debug)]
+pub struct OpcodeUnimplemented(pub u8);
+impl<C: Context> OpcodeHandler<C> for OpcodeUnimplemented {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        _machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        Err(ExecError::Context(
+            format!(
+                "Opcode 0x{:02x} is not implemented! Feel free to open a PR! :)",
+                self.0
+            )
+            .into(),
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error;

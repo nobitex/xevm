@@ -62,14 +62,14 @@ impl Machine {
         opcode_table.insert(0x02, Box::new(OpcodeMul));
 
         opcode_table.insert(0x03, Box::new(OpcodeSub));
-        /*opcode_table.insert(0x04, Box::new(OpcodeDiv));
-        opcode_table.insert(0x05, Box::new(OpcodeSdiv));
-        opcode_table.insert(0x06, Box::new(OpcodeMod));
-        opcode_table.insert(0x07, Box::new(OpcodeSmod));
-        opcode_table.insert(0x08, Box::new(OpcodeAddMod));
-        opcode_table.insert(0x09, Box::new(OpcodeMulMod));
-        opcode_table.insert(0x0a, Box::new(OpcodeExp));
-        opcode_table.insert(0x0b, Box::new(OpcodeSignExtend));*/
+        opcode_table.insert(0x04, Box::new(OpcodeUnimplemented(0x04))); // OpcodeDiv
+        opcode_table.insert(0x05, Box::new(OpcodeUnimplemented(0x05))); // OpcodeSdiv
+        opcode_table.insert(0x06, Box::new(OpcodeUnimplemented(0x06))); // OpcodeMod
+        opcode_table.insert(0x07, Box::new(OpcodeUnimplemented(0x07))); // OpcodeSmod
+        opcode_table.insert(0x08, Box::new(OpcodeUnimplemented(0x08))); // OpcodeAddMod
+        opcode_table.insert(0x09, Box::new(OpcodeUnimplemented(0x09))); // OpcodeMulMod
+        opcode_table.insert(0x0a, Box::new(OpcodeUnimplemented(0x0a))); // OpcodeExp
+        opcode_table.insert(0x0b, Box::new(OpcodeUnimplemented(0x0b))); // OpcodeSignExtend
 
         opcode_table.insert(0x10, Box::new(OpcodeLt));
         opcode_table.insert(0x11, Box::new(OpcodeGt));
