@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(ctx.address()?);
         machine.pc += 1;
         Ok(None)
@@ -31,7 +31,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.balance(addr)?);
         machine.pc += 1;
@@ -48,7 +48,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCallValue {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.call_value);
         machine.pc += 1;
         Ok(None)
@@ -64,7 +64,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.caller);
         machine.pc += 1;
         Ok(None)
@@ -80,7 +80,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.origin);
         machine.pc += 1;
         Ok(None)
@@ -95,7 +95,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
         _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(U256::from(machine.code.len() as u64));
         machine.pc += 1;
         Ok(None)
@@ -110,7 +110,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
         _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_addr = machine.pop_stack()?.as_usize()?;
         let addr = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
@@ -130,7 +130,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataSize {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine
             .stack
             .push(U256::from(call_info.calldata.len() as u64));
@@ -148,7 +148,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_addr = machine.pop_stack()?.as_usize()?;
         let addr = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
@@ -167,7 +167,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
         machine: &mut Machine,
 
         call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.as_usize()?;
         let mut ret = [0u8; 32];
         for i in 0..32 {

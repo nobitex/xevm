@@ -1,6 +1,7 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -14,15 +15,15 @@ impl<C: Context> OpcodeHandler<C> for OpcodeDup {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         if self.0 as usize >= machine.stack.len() {
-            return Err(XevmError::Other("Dup element doesn't exist!".into()));
+            return Err(ExecError::Revert(RevertError::NotEnoughValuesOnStack));
         }
         let elem = machine
             .stack
             .get(machine.stack.len() - 1 - self.0 as usize)
             .copied()
-            .ok_or(XevmError::Other("Dup element doesn't exist!".into()))?;
+            .ok_or(ExecError::Revert(RevertError::NotEnoughValuesOnStack))?;
         machine.stack.push(elem);
         machine.pc += 1;
         Ok(None)

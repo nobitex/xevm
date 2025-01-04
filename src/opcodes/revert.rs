@@ -1,6 +1,7 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -12,12 +13,11 @@ impl<C: Context> OpcodeHandler<C> for OpcodeRevert {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
         let revert_value = machine.mem_get(offset, size);
-        Ok(Some(ExecutionResult::Reverted(revert_value)))
+        Err(ExecError::Revert(RevertError::Revert(revert_value)))
     }
 }

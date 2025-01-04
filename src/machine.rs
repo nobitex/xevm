@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 
-use crate::error::XevmError;
+use crate::error::{ExecError, RevertError};
 use crate::opcodes::*;
 use crate::u256::U256;
 
@@ -14,7 +14,7 @@ pub trait Context {
         address: U256,
         value: U256,
         args: Vec<u8>,
-    ) -> Result<ExecutionResult, Box<dyn Error>>;
+    ) -> Result<ExecutionResult, ExecError>;
     fn address(&self) -> Result<U256, Box<dyn Error>>;
     fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
@@ -55,7 +55,7 @@ impl Machine {
         mut self,
         ctx: &mut C,
         call_info: &CallInfo,
-    ) -> Result<ExecutionResult, XevmError> {
+    ) -> Result<ExecutionResult, ExecError> {
         let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
         opcode_table.insert(0x00, Box::new(OpcodeHalt));
         opcode_table.insert(0x01, Box::new(OpcodeAdd));
@@ -159,10 +159,10 @@ impl Machine {
                     return Ok(res);
                 }
             } else {
-                return Err(XevmError::UnknownOpcode(opcode));
+                return Err(RevertError::UnknownOpcode(opcode).into());
             }
         }
-        Err(XevmError::DidntFinish)
+        Ok(ExecutionResult::Halted)
     }
 
     pub fn mem_put(&mut self, offset: usize, data: &[u8]) {
@@ -178,10 +178,10 @@ impl Machine {
         ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
         ret
     }
-    pub fn pop_stack(&mut self) -> Result<U256, XevmError> {
+    pub fn pop_stack(&mut self) -> Result<U256, ExecError> {
         Ok(self
             .stack
             .pop()
-            .ok_or(XevmError::Other("Stack empty!".into()))?)
+            .ok_or(RevertError::NotEnoughValuesOnStack)?)
     }
 }

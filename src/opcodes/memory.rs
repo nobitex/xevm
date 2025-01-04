@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSstore {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         ctx.sstore(addr, val)?;
@@ -33,7 +33,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSload {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.sload(addr)?);
         machine.pc += 1;
@@ -50,7 +50,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTstore {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.transient.insert(addr, val);
@@ -68,7 +68,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeTload {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         machine
             .stack
@@ -87,7 +87,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.as_usize()?;
         let val = machine.pop_stack()?.to_bytes_be();
         machine.mem_put(addr, &val);
@@ -105,7 +105,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMload {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.as_usize()?;
         let ret = machine.mem_get(addr, 32);
         machine.stack.push(U256::from_bytes_be(&ret));
@@ -123,7 +123,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMstore8 {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.as_usize()?;
         let val = machine.pop_stack()?.as_usize()?;
         machine.mem_put(addr, &[val as u8]);

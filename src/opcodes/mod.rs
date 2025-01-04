@@ -41,13 +41,12 @@ pub use revert::OpcodeRevert;
 pub use swap::OpcodeSwap;
 
 use crate::{
-    error::XevmError,
+    error::ExecError,
     machine::{CallInfo, Context, Machine},
 };
 
 #[derive(Debug, Clone)]
 pub enum ExecutionResult {
-    Reverted(Vec<u8>),
     Returned(Vec<u8>),
     Halted,
 }
@@ -58,7 +57,7 @@ pub trait OpcodeHandler<C: Context> {
         ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError>;
+    ) -> Result<Option<ExecutionResult>, ExecError>;
 }
 
 #[cfg(test)]
@@ -89,7 +88,7 @@ mod tests {
             _address: U256,
             _value: U256,
             _args: Vec<u8>,
-        ) -> Result<ExecutionResult, Box<dyn Error>> {
+        ) -> Result<ExecutionResult, ExecError> {
             unimplemented!()
         }
         fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {

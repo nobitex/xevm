@@ -1,5 +1,5 @@
 use super::ExecutionResult;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::keccak::keccak;
 use crate::machine::CallInfo;
 use crate::u256::U256;
@@ -16,7 +16,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeKeccak {
         _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
         let data = machine.mem_get(offset, size);

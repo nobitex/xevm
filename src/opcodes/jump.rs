@@ -1,6 +1,7 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -14,13 +15,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
         _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?.as_usize()?;
         if target >= machine.code.len() {
-            return Err(XevmError::Other("Jump higher than code length!".into()));
+            return Err(ExecError::Revert(RevertError::InvalidJump));
         }
         if machine.code[target] != 0x5b {
-            return Err(XevmError::Other("Jump to a non-JUMPDEST target!".into()));
+            return Err(ExecError::Revert(RevertError::InvalidJump));
         }
         machine.pc = target;
         Ok(None)
@@ -36,7 +37,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpDest {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.pc += 1;
         Ok(None)
     }
@@ -50,14 +51,14 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?.as_usize()?;
         let cond = machine.pop_stack()?;
         if target >= machine.code.len() {
-            return Err(XevmError::Other("Jump higher than code length!".into()));
+            return Err(ExecError::Revert(RevertError::InvalidJump));
         }
         if machine.code[target] != 0x5b {
-            return Err(XevmError::Other("Jump to a non-JUMPDEST target!".into()));
+            return Err(ExecError::Revert(RevertError::InvalidJump));
         }
         if cond != U256::ZERO {
             machine.pc = target;

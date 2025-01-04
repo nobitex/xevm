@@ -1,6 +1,7 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -14,16 +15,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let stack_len = machine.stack.len();
         if self.0 as usize >= stack_len {
-            return Err(XevmError::Other("Swap element doesn't exist!".into()));
+            return Err(ExecError::Revert(RevertError::NotEnoughValuesOnStack));
         }
         let b = machine
             .stack
             .get_mut(stack_len - 1 - self.0 as usize)
-            .ok_or(XevmError::Other("Swap element doesn't exist!".into()))?;
+            .ok_or(ExecError::Revert(RevertError::NotEnoughValuesOnStack))?;
         let b_val = *b;
         *b = a;
         machine.stack.push(b_val);

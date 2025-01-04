@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
-use xevm::keccak::keccak;
+use xevm::error::ExecError;
 use xevm::machine::{CallInfo, Context, Machine};
 use xevm::opcodes::ExecutionResult;
 use xevm::u256::U256;
@@ -37,7 +37,7 @@ impl Context for DummyContext {
         address: U256,
         value: U256,
         args: Vec<u8>,
-    ) -> Result<ExecutionResult, Box<dyn Error>> {
+    ) -> Result<ExecutionResult, ExecError> {
         let contract = self.contracts.entry(address).or_default();
         contract.value = contract.value + value;
         let machine = Machine::new(contract.code.clone());

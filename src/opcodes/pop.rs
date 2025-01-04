@@ -1,5 +1,5 @@
 use super::ExecutionResult;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 
 use super::OpcodeHandler;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodePop {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.pop_stack()?;
         machine.pc += 1;
         Ok(None)

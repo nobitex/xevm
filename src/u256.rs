@@ -3,7 +3,7 @@ use std::{
     ops::{Add, BitAnd, BitOr, BitXor, Mul, Neg, Not, Shl, Shr, Sub},
 };
 
-use crate::error::XevmError;
+use crate::error::{ExecError, RevertError};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct U256(pub u128, pub u128);
@@ -32,9 +32,9 @@ impl U256 {
     pub fn shl128(&self) -> Self {
         Self(0, self.0)
     }
-    pub fn as_usize(&self) -> Result<usize, XevmError> {
+    pub fn as_usize(&self) -> Result<usize, ExecError> {
         if self.1 != 0 || self.0 > usize::MAX as u128 {
-            return Err(XevmError::Other("Big number!".into()));
+            return Err(RevertError::OffsetSizeTooLarge.into());
         }
         Ok(self.lower_usize())
     }
@@ -79,6 +79,7 @@ impl Add for U256 {
         U256(l0, l1)
     }
 }
+
 impl Sub for U256 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {

@@ -1,35 +1,52 @@
 use std::error::Error;
 
 #[derive(Debug)]
-pub enum XevmError {
-    UnknownOpcode(u8),
-    DidntFinish,
-    Other(Box<dyn Error>),
+pub enum ExecError {
+    Revert(RevertError),
+    Context(Box<dyn Error>),
 }
 
-impl From<Box<dyn Error>> for XevmError {
+#[derive(Debug)]
+pub enum RevertError {
+    UnknownOpcode(u8),
+    NotEnoughValuesOnStack,
+    NotEnoughBytesInCode,
+    OffsetSizeTooLarge,
+    InvalidJump,
+    Revert(Vec<u8>),
+}
+
+impl From<Box<dyn Error>> for ExecError {
     fn from(value: Box<dyn Error>) -> Self {
-        Self::Other(value)
+        Self::Context(value)
     }
 }
 
-impl std::fmt::Display for XevmError {
+impl From<RevertError> for ExecError {
+    fn from(value: RevertError) -> Self {
+        Self::Revert(value)
+    }
+}
+
+impl std::fmt::Display for ExecError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl Error for XevmError {
-    fn cause(&self) -> Option<&dyn Error> {
-        match self {
-            XevmError::Other(parent) => Some(parent.as_ref()),
-            _ => None,
-        }
+impl std::fmt::Display for RevertError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
+}
+
+impl Error for RevertError {}
+
+impl Error for ExecError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            XevmError::Other(parent) => Some(parent.as_ref()),
-            _ => None,
+            ExecError::Context(parent) => Some(parent.as_ref()),
+            ExecError::Revert(rev) => Some(rev),
         }
     }
 }

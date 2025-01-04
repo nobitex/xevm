@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAdd {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a + b);
@@ -34,7 +34,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSub {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a - b);
@@ -53,7 +53,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeMul {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a * b);
@@ -72,7 +72,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShl {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let shift = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.stack.push(val << shift);
@@ -90,7 +90,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeShr {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let shift = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.stack.push(val >> shift);
@@ -108,7 +108,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSar {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let shift = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         let mut result = val >> shift;
@@ -131,7 +131,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAnd {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a & b);
@@ -149,7 +149,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOr {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a | b);
@@ -167,7 +167,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeXor {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(a ^ b);
@@ -185,7 +185,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeNot {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         machine.stack.push(!a);
         machine.pc += 1;
@@ -202,7 +202,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeByte {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let i = machine.pop_stack()?.as_usize()?;
         let x = machine.pop_stack()?.to_bytes_be();
         machine

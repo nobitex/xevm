@@ -1,5 +1,5 @@
 use super::ExecutionResult;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 
 use super::OpcodeHandler;
@@ -14,7 +14,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate {
         ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;
@@ -34,7 +34,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate2 {
         ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.as_usize()?;
         let size = machine.pop_stack()?.as_usize()?;

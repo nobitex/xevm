@@ -1,6 +1,7 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -13,11 +14,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodePush {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         if machine.code.len() - machine.pc < self.0 as usize {
-            return Err(XevmError::Other("Not enough bytes!".into()));
+            return Err(ExecError::Revert(RevertError::NotEnoughBytesInCode));
         }
         machine.stack.push(if self.0 == 0 {
             U256::ZERO

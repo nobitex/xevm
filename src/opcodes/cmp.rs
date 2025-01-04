@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
-use crate::error::XevmError;
+use crate::error::ExecError;
 use crate::machine::CallInfo;
 use crate::machine::Context;
 use crate::machine::Machine;
@@ -15,7 +15,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeLt {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a < b) as u64));
@@ -33,7 +33,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeGt {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a > b) as u64));
@@ -51,7 +51,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeEq {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(U256::from((a == b) as u64));
@@ -69,7 +69,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeIsZero {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         machine.stack.push(U256::from((a == U256::ZERO) as u64));
         machine.pc += 1;
@@ -86,7 +86,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSlt {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         let res = match (a.is_neg(), b.is_neg()) {
@@ -110,7 +110,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSgt {
         machine: &mut Machine,
 
         _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, XevmError> {
+    ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         let res = match (a.is_neg(), b.is_neg()) {
