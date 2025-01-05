@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
-use xevm::error::ExecError;
+use xevm::error::{ExecError, RevertError};
 use xevm::keccak::keccak;
 use xevm::machine::{CallInfo, Context, Machine};
 use xevm::opcodes::ExecutionResult;
@@ -44,18 +44,18 @@ fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
 }
 
 impl Context for DummyContext {
-    fn create(
-        &mut self,
-        creator: U256,
-        value: U256,
-        code: Vec<u8>,
-    ) -> Result<U256, Box<dyn Error>> {
+    fn create(&mut self, creator: U256, value: U256, code: Vec<u8>) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(creator).or_default();
+        if acc.value >= value {
+            acc.value = acc.value - value;
+            acc.nonce = acc.nonce + U256::ONE;
+        } else {
+            return Err(ExecError::Revert(RevertError::InsufficientBalance));
+        }
         let contract_addr =
             U256::from_bytes_be(&keccak(&rlp_address_nonce(creator, acc.nonce))[12..32]);
         acc.nonce = acc.nonce + U256::ONE;
         let cont = self.accounts.entry(contract_addr).or_default();
-
         cont.code = code;
         cont.value = value;
         Ok(contract_addr)
@@ -66,14 +66,19 @@ impl Context for DummyContext {
         value: U256,
         code: Vec<u8>,
         salt: U256,
-    ) -> Result<U256, Box<dyn Error>> {
+    ) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(creator).or_default();
+        if acc.value >= value {
+            acc.value = acc.value - value;
+            acc.nonce = acc.nonce + U256::ONE;
+        } else {
+            return Err(ExecError::Revert(RevertError::InsufficientBalance));
+        }
         let mut inp = vec![0xffu8];
         inp.extend(&creator.to_bytes_be()[12..32]);
         inp.extend(&salt.to_bytes_be());
         inp.extend(&keccak(&code));
         let contract_addr = U256::from_bytes_be(&keccak(&inp)[12..32]);
-        acc.nonce = acc.nonce + U256::ONE;
         let cont = self.accounts.entry(contract_addr).or_default();
         cont.value = value;
         cont.code = code;
@@ -85,14 +90,25 @@ impl Context for DummyContext {
         address: U256,
         call_info: CallInfo,
     ) -> Result<ExecutionResult, ExecError> {
+        let caller = self.accounts.entry(call_info.caller).or_default();
+        if caller.value >= call_info.call_value {
+            caller.value = caller.value - call_info.call_value;
+            caller.nonce = caller.nonce + U256::ONE;
+        } else {
+            return Err(ExecError::Revert(RevertError::InsufficientBalance));
+        }
         let contract = self.accounts.entry(address).or_default();
         contract.value = contract.value + call_info.call_value;
         let machine = Machine::new(address, contract.code.clone());
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
     }
-    fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
-        Ok(U256::ONE)
+    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(self
+            .accounts
+            .get(&address)
+            .map(|a| a.value)
+            .unwrap_or_default())
     }
     fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(self.mem.get(&address).copied().unwrap_or_default())
