@@ -11,7 +11,7 @@ pub struct OpcodeAddress;
 impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
     fn call(
         &self,
-        ctx: &mut C,
+        _ctx: &mut C,
         machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {

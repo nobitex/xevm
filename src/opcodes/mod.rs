@@ -112,8 +112,8 @@ mod tests {
         fn call(
             &mut self,
             _gas: U256,
-            address: U256,
-            call_info: CallInfo,
+            _address: U256,
+            _call_info: CallInfo,
         ) -> Result<ExecutionResult, ExecError> {
             unimplemented!()
         }
