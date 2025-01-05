@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::{collections::HashMap, fmt::Debug};
 use xevm::error::ExecError;
+use xevm::keccak::keccak;
 use xevm::machine::{CallInfo, Context, Machine};
 use xevm::opcodes::ExecutionResult;
 use xevm::u256::U256;
@@ -15,21 +16,68 @@ fn parse_hex(s: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 
 #[derive(Clone, Debug, Default)]
 pub struct Account {
+    nonce: U256,
     value: U256,
     code: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct DummyContext {
-    contracts: HashMap<U256, Account>,
+    accounts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
-impl Context for DummyContext {
-    fn create(&mut self, value: U256, code: Vec<u8>) -> Result<U256, Box<dyn Error>> {
-        Ok(U256::ZERO)
+
+fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
+    let mut rlp = vec![0x94u8];
+    rlp.extend(&addr.to_bytes_be()[12..32]);
+    if nonce < U256::from(128) {
+        rlp.extend(&[nonce.as_usize().unwrap() as u8]);
+    } else {
+        let mut bytes = nonce.to_bytes_be().to_vec();
+        while bytes[0] == 0 {
+            bytes.remove(0);
+        }
+        rlp.push(0x80u8 + bytes.len() as u8);
+        rlp.extend(&bytes);
     }
-    fn create2(&mut self, value: U256, code: Vec<u8>, salt: U256) -> Result<U256, Box<dyn Error>> {
-        Ok(U256::ZERO)
+    rlp
+}
+
+impl Context for DummyContext {
+    fn create(
+        &mut self,
+        creator: U256,
+        value: U256,
+        code: Vec<u8>,
+    ) -> Result<U256, Box<dyn Error>> {
+        let acc = self.accounts.entry(creator).or_default();
+        let contract_addr =
+            U256::from_bytes_be(&keccak(&rlp_address_nonce(creator, acc.nonce))[12..32]);
+        acc.nonce = acc.nonce + U256::ONE;
+        let cont = self.accounts.entry(contract_addr).or_default();
+
+        cont.code = code;
+        cont.value = value;
+        Ok(contract_addr)
+    }
+    fn create2(
+        &mut self,
+        creator: U256,
+        value: U256,
+        code: Vec<u8>,
+        salt: U256,
+    ) -> Result<U256, Box<dyn Error>> {
+        let acc = self.accounts.entry(creator).or_default();
+        let mut inp = vec![0xffu8];
+        inp.extend(&creator.to_bytes_be()[12..32]);
+        inp.extend(&salt.to_bytes_be());
+        inp.extend(&keccak(&code));
+        let contract_addr = U256::from_bytes_be(&keccak(&inp)[12..32]);
+        acc.nonce = acc.nonce + U256::ONE;
+        let cont = self.accounts.entry(contract_addr).or_default();
+        cont.value = value;
+        cont.code = code;
+        Ok(contract_addr)
     }
     fn call(
         &mut self,
@@ -37,7 +85,7 @@ impl Context for DummyContext {
         address: U256,
         call_info: CallInfo,
     ) -> Result<ExecutionResult, ExecError> {
-        let contract = self.contracts.entry(address).or_default();
+        let contract = self.accounts.entry(address).or_default();
         contract.value = contract.value + call_info.call_value;
         let machine = Machine::new(address, contract.code.clone());
         let exec_result = machine.run(self, &call_info)?;

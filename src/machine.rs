@@ -6,8 +6,15 @@ use crate::opcodes::*;
 use crate::u256::U256;
 
 pub trait Context {
-    fn create(&mut self, value: U256, code: Vec<u8>) -> Result<U256, Box<dyn Error>>;
-    fn create2(&mut self, value: U256, code: Vec<u8>, salt: U256) -> Result<U256, Box<dyn Error>>;
+    fn create(&mut self, creator: U256, value: U256, code: Vec<u8>)
+        -> Result<U256, Box<dyn Error>>;
+    fn create2(
+        &mut self,
+        creator: U256,
+        value: U256,
+        code: Vec<u8>,
+        salt: U256,
+    ) -> Result<U256, Box<dyn Error>>;
     fn call(
         &mut self,
         _gas: U256,

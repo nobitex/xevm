@@ -91,11 +91,17 @@ mod tests {
     #[derive(Clone, Debug, Default)]
     pub struct TestContext;
     impl Context for TestContext {
-        fn create(&mut self, _value: U256, _code: Vec<u8>) -> Result<U256, Box<dyn Error>> {
+        fn create(
+            &mut self,
+            _creator: U256,
+            _value: U256,
+            _code: Vec<u8>,
+        ) -> Result<U256, Box<dyn Error>> {
             unimplemented!()
         }
         fn create2(
             &mut self,
+            _creator: U256,
             _value: U256,
             _code: Vec<u8>,
             _salt: U256,
