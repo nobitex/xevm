@@ -14,7 +14,7 @@ pub enum RevertError {
     OffsetSizeTooLarge,
     InvalidJump,
     Revert(Vec<u8>),
-    InsufficientBalance
+    InsufficientBalance,
 }
 
 impl From<Box<dyn Error>> for ExecError {

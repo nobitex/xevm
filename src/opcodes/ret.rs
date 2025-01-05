@@ -1,8 +1,8 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
+use crate::context::Context;
 use crate::error::ExecError;
 use crate::machine::CallInfo;
-use crate::machine::Context;
 use crate::machine::Machine;
 
 #[derive(Debug)]

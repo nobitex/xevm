@@ -42,8 +42,9 @@ pub use revert::OpcodeRevert;
 pub use swap::OpcodeSwap;
 
 use crate::{
+    context::Context,
     error::ExecError,
-    machine::{CallInfo, Context, Machine},
+    machine::{CallInfo, Machine},
 };
 
 #[derive(Debug, Clone)]

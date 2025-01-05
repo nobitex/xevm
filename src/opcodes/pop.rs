@@ -3,7 +3,7 @@ use crate::error::ExecError;
 use crate::machine::CallInfo;
 
 use super::OpcodeHandler;
-use crate::machine::Context;
+use crate::context::Context;
 use crate::machine::Machine;
 
 #[derive(Debug)]

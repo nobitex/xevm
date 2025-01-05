@@ -1,31 +1,9 @@
 use std::collections::HashMap;
-use std::error::Error;
 
+use crate::context::Context;
 use crate::error::{ExecError, RevertError};
 use crate::opcodes::*;
 use crate::u256::U256;
-
-pub trait Context {
-    fn create(&mut self, creator: U256, value: U256, code: Vec<u8>)
-        -> Result<U256, ExecError>;
-    fn create2(
-        &mut self,
-        creator: U256,
-        value: U256,
-        code: Vec<u8>,
-        salt: U256,
-    ) -> Result<U256, ExecError>;
-    fn call(
-        &mut self,
-        _gas: U256,
-        address: U256,
-        call_info: CallInfo,
-    ) -> Result<ExecutionResult, ExecError>;
-    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
-    fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
-    fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>>;
-    fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
-}
 
 #[derive(Debug, Clone, Default)]
 pub struct CallInfo {

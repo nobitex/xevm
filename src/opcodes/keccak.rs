@@ -5,7 +5,7 @@ use crate::machine::CallInfo;
 use crate::u256::U256;
 
 use super::OpcodeHandler;
-use crate::machine::Context;
+use crate::context::Context;
 use crate::machine::Machine;
 
 #[derive(Debug)]

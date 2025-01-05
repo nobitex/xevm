@@ -1,9 +1,9 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
+use crate::context::Context;
 use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
-use crate::machine::Context;
 use crate::machine::Machine;
 use crate::u256::U256;
 
