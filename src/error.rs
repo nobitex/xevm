@@ -6,7 +6,18 @@ pub enum ExecError {
     Context(Box<dyn Error>),
 }
 
-#[derive(Debug)]
+impl PartialEq for ExecError {
+    fn eq(&self, other: &Self) -> bool {
+        if let ExecError::Revert(a) = self {
+            if let ExecError::Revert(b) = other {
+                return a == b;
+            }
+        }
+        false
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum RevertError {
     UnknownOpcode(u8),
     NotEnoughValuesOnStack,
@@ -15,6 +26,7 @@ pub enum RevertError {
     InvalidJump,
     Revert(Vec<u8>),
     InsufficientBalance,
+    ContractAlreadyDeployed,
 }
 
 impl From<Box<dyn Error>> for ExecError {

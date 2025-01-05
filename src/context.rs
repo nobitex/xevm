@@ -93,6 +93,14 @@ impl Context for DummyContext {
         inp.extend(&salt.to_bytes_be());
         inp.extend(&keccak(&code));
         let contract_addr = U256::from_bytes_be(&keccak(&inp)[12..32]);
+        if self
+            .accounts
+            .get(&contract_addr)
+            .map(|acc| !acc.code.is_empty())
+            .unwrap_or_default()
+        {
+            return Err(ExecError::Revert(RevertError::ContractAlreadyDeployed));
+        }
         let cont = self.accounts.entry(contract_addr).or_default();
         cont.value = value;
         cont.code = code;
@@ -158,5 +166,19 @@ mod tests {
         let contract_addr = ctx.create(123.into(), 2.into(), vec![1, 2, 3]).unwrap();
         assert_eq!(ctx.balance(123.into()).unwrap(), U256::from(3));
         assert_eq!(ctx.balance(contract_addr).unwrap(), U256::from(2));
+    }
+    #[test]
+    fn test_context_prevent_redeploy() {
+        let mut ctx = DummyContext::default();
+        assert!(ctx
+            .create2(123.into(), 0.into(), vec![1, 2, 3], 123.into())
+            .is_ok());
+        assert!(ctx
+            .create2(123.into(), 0.into(), vec![1, 2, 3], 234.into())
+            .is_ok());
+        assert_eq!(
+            ctx.create2(123.into(), 0.into(), vec![1, 2, 3], 123.into()),
+            Err(ExecError::Revert(RevertError::ContractAlreadyDeployed))
+        );
     }
 }
