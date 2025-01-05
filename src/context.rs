@@ -136,3 +136,27 @@ impl Context for DummyContext {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_context() {
+        let mut ctx = DummyContext::default();
+        ctx.create(123.into(), 0.into(), vec![1, 2, 3]).unwrap();
+    }
+
+    #[test]
+    fn test_context_spend() {
+        let mut ctx = DummyContext::default();
+        ctx.accounts.entry(123.into()).or_insert(Account {
+            nonce: 0.into(),
+            value: 5.into(),
+            code: vec![],
+        });
+        let contract_addr = ctx.create(123.into(), 2.into(), vec![1, 2, 3]).unwrap();
+        assert_eq!(ctx.balance(123.into()).unwrap(), U256::from(3));
+        assert_eq!(ctx.balance(contract_addr).unwrap(), U256::from(2));
+    }
+}
