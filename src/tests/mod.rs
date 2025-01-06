@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::{
     context::{Account, Context, MiniEthereum},
     machine::CallInfo,
