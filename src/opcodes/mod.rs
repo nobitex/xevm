@@ -47,7 +47,7 @@ use crate::{
     machine::{CallInfo, Machine},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExecutionResult {
     Returned(Vec<u8>),
     Halted,
