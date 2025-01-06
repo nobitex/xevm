@@ -90,9 +90,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(match self {
-            Self::Add => a + b,
-            Self::Mul => a * b,
-            Self::Sub => a - b,
+            Self::Add => a.overflowing_add(b).0,
+            Self::Mul => a.overflowing_mul(b).0,
+            Self::Sub => a.overflowing_sub(b).0,
             Self::Div => a / b,
             Self::Sdiv => a / b,
             Self::Mod => a % b,

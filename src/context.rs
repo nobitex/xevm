@@ -38,15 +38,15 @@ pub trait Context {
 
 #[derive(Clone, Debug, Default)]
 pub struct Account {
-    nonce: U256,
-    value: U256,
-    code: Vec<u8>,
+    pub nonce: U256,
+    pub value: U256,
+    pub code: Vec<u8>,
 }
 
 #[derive(Clone, Default)]
 pub struct MiniEthereum {
     precompiles: HashMap<U256, &'static dyn Fn(CallInfo) -> Result<ExecutionResult, ExecError>>,
-    accounts: HashMap<U256, Account>,
+    pub accounts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
 
