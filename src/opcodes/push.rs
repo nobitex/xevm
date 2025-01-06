@@ -20,9 +20,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodePush {
             return Err(ExecError::Revert(RevertError::NotEnoughBytesInCode));
         }
         machine.stack.push(if self.0 == 0 {
-            U256::ZERO
+            U256::zero()
         } else {
-            U256::from_bytes_be(&machine.code[machine.pc + 1..machine.pc + 1 + self.0 as usize])
+            U256::from_big_endian(&machine.code[machine.pc + 1..machine.pc + 1 + self.0 as usize])
         });
         machine.pc += 1 + self.0 as usize;
         Ok(None)

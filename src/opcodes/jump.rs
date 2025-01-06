@@ -16,7 +16,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
         machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let target = machine.pop_stack()?.as_usize()?;
+        let target = machine.pop_stack()?.to_usize()?;
         if target >= machine.code.len() {
             return Err(ExecError::Revert(RevertError::InvalidJump));
         }
@@ -52,7 +52,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let target = machine.pop_stack()?.as_usize()?;
+        let target = machine.pop_stack()?.to_usize()?;
         let cond = machine.pop_stack()?;
         if target >= machine.code.len() {
             return Err(ExecError::Revert(RevertError::InvalidJump));
@@ -60,7 +60,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         if machine.code[target] != 0x5b {
             return Err(ExecError::Revert(RevertError::InvalidJump));
         }
-        if cond != U256::ZERO {
+        if cond != U256::zero() {
             machine.pc = target;
         } else {
             machine.pc += 1;

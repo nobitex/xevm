@@ -141,7 +141,7 @@ mod tests {
     ) {
         for (inp, expected_out) in testcases {
             let mut ctx = TestContext;
-            let mut machine = Machine::new(U256::ZERO, vec![]);
+            let mut machine = Machine::new(U256::zero(), vec![]);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

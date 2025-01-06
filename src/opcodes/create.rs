@@ -16,8 +16,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate {
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
-        let offset = machine.pop_stack()?.as_usize()?;
-        let size = machine.pop_stack()?.as_usize()?;
+        let offset = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
         let code = machine.mem_get(offset, size);
         let addr = ctx.create(call_info.caller, value, code)?;
         machine.stack.push(addr);
@@ -36,8 +36,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate2 {
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
-        let offset = machine.pop_stack()?.as_usize()?;
-        let size = machine.pop_stack()?.as_usize()?;
+        let offset = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
         let salt = machine.pop_stack()?;
         let code = machine.mem_get(offset, size);
         let addr = ctx.create2(call_info.caller, value, code, salt)?;

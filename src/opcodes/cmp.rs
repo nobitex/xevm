@@ -71,7 +71,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeIsZero {
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
-        machine.stack.push(U256::from((a == U256::ZERO) as u64));
+        machine.stack.push(U256::from((a == U256::zero()) as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -137,17 +137,17 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
                 (
                     &[U256::MAX, U256::MAX - U256::from(123)],
-                    Some(&[U256::ZERO]),
+                    Some(&[U256::zero()]),
                 ),
-                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
                 (
                     &[U256::MAX - U256::from(123), U256::MAX],
-                    Some(&[U256::ONE]),
+                    Some(&[U256::one()]),
                 ),
             ],
         );
@@ -160,17 +160,17 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
                 (
                     &[U256::MAX, U256::MAX - U256::from(123)],
-                    Some(&[U256::ONE]),
+                    Some(&[U256::one()]),
                 ),
-                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
                 (
                     &[U256::MAX - U256::from(123), U256::MAX],
-                    Some(&[U256::ZERO]),
+                    Some(&[U256::zero()]),
                 ),
             ],
         );
@@ -183,14 +183,14 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
-                (&[-U256::from(123), U256::from(123)], Some(&[U256::ONE])),
-                (&[U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
-                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
-                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ZERO])),
-                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::one()])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::zero()])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::one()])),
             ],
         );
     }
@@ -202,14 +202,14 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
-                (&[-U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::from(123), -U256::from(123)], Some(&[U256::ONE])),
-                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
-                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ONE])),
-                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::one()])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::one()])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::zero()])),
             ],
         );
     }
@@ -221,11 +221,11 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(0), U256::from(0)], Some(&[U256::ONE])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::ONE])),
-                (&[U256::from(123), U256::from(122)], Some(&[U256::ZERO])),
-                (&[U256::MAX, U256::MAX], Some(&[U256::ONE])),
-                (&[U256::MAX, U256::MAX - U256::ONE], Some(&[U256::ZERO])),
+                (&[U256::from(0), U256::from(0)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(122)], Some(&[U256::zero()])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::one()])),
+                (&[U256::MAX, U256::MAX - U256::one()], Some(&[U256::zero()])),
             ],
         );
     }
@@ -236,10 +236,10 @@ mod tests {
             OpcodeIsZero,
             &[
                 (&[], None),
-                (&[U256::from(0)], Some(&[U256::ONE])),
-                (&[U256::from(123)], Some(&[U256::ZERO])),
-                (&[U256::MAX], Some(&[U256::ZERO])),
-                (&[U256::MAX - U256::ONE], Some(&[U256::ZERO])),
+                (&[U256::from(0)], Some(&[U256::one()])),
+                (&[U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::MAX], Some(&[U256::zero()])),
+                (&[U256::MAX - U256::one()], Some(&[U256::zero()])),
             ],
         );
     }

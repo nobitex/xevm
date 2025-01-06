@@ -203,8 +203,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeByte {
 
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let i = machine.pop_stack()?.as_usize()?;
-        let x = machine.pop_stack()?.to_bytes_be();
+        let i = machine.pop_stack()?.to_usize()?;
+        let x = machine.pop_stack()?.to_big_endian();
         machine
             .stack
             .push(U256::from(if i < 32 { x[i] as u64 } else { 0 }));
@@ -238,7 +238,7 @@ mod tests {
                     Some(&[-U256::from(1)]),
                 ),
                 (
-                    &[U256::from(128), U256::MAX >> U256::ONE],
+                    &[U256::from(128), U256::MAX >> U256::one()],
                     Some(&[U256::MAX >> U256::from(129)]),
                 ),
                 (&[U256::from(128), U256::MAX], Some(&[U256::MAX])),

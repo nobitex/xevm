@@ -15,8 +15,8 @@ impl<C: Context> OpcodeHandler<C> for OpcodeRevert {
         machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let offset = machine.pop_stack()?.as_usize()?;
-        let size = machine.pop_stack()?.as_usize()?;
+        let offset = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
         let revert_value = machine.mem_get(offset, size);
         Err(ExecError::Revert(RevertError::Revert(revert_value)))
     }

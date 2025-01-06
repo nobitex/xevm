@@ -109,9 +109,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
         machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let dest_addr = machine.pop_stack()?.as_usize()?;
-        let addr = machine.pop_stack()?.as_usize()?;
-        let size = machine.pop_stack()?.as_usize()?;
+        let dest_addr = machine.pop_stack()?.to_usize()?;
+        let addr = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
         let code = machine.code[addr..addr + size].to_vec();
         machine.mem_put(dest_addr, &code);
         machine.pc += 1;
@@ -147,9 +147,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
 
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let dest_addr = machine.pop_stack()?.as_usize()?;
-        let addr = machine.pop_stack()?.as_usize()?;
-        let size = machine.pop_stack()?.as_usize()?;
+        let dest_addr = machine.pop_stack()?.to_usize()?;
+        let addr = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
         machine.mem_put(dest_addr, &call_info.calldata[addr..addr + size]);
         machine.pc += 1;
         Ok(None)
@@ -166,7 +166,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
 
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let offset = machine.pop_stack()?.as_usize()?;
+        let offset = machine.pop_stack()?.to_usize()?;
         let mut ret = [0u8; 32];
         for i in 0..32 {
             ret[i] = call_info
@@ -175,7 +175,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
                 .copied()
                 .unwrap_or_default();
         }
-        machine.stack.push(U256::from_bytes_be(&ret));
+        machine.stack.push(U256::from_big_endian(&ret));
         machine.pc += 1;
         Ok(None)
     }

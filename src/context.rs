@@ -57,11 +57,11 @@ pub struct DummyContext {
 
 fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
     let mut rlp = vec![0x94u8];
-    rlp.extend(&addr.to_bytes_be()[12..32]);
+    rlp.extend(&addr.to_big_endian()[12..32]);
     if nonce < U256::from(128) {
-        rlp.extend(&[nonce.as_usize().unwrap() as u8]);
+        rlp.extend(&[nonce.low_u32() as u8]);
     } else {
-        let mut bytes = nonce.to_bytes_be().to_vec();
+        let mut bytes = nonce.to_big_endian().to_vec();
         while bytes[0] == 0 {
             bytes.remove(0);
         }
@@ -74,19 +74,19 @@ fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
 impl Context for DummyContext {
     fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>> {
         match inf {
-            _ => Ok(U256::ZERO),
+            _ => Ok(U256::zero()),
         }
     }
     fn create(&mut self, creator: U256, value: U256, code: Vec<u8>) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(creator).or_default();
         if acc.value >= value {
             acc.value = acc.value - value;
-            acc.nonce = acc.nonce + U256::ONE;
+            acc.nonce = acc.nonce + U256::one();
         } else {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
         let contract_addr =
-            U256::from_bytes_be(&keccak(&rlp_address_nonce(creator, acc.nonce))[12..32]);
+            U256::from_big_endian(&keccak(&rlp_address_nonce(creator, acc.nonce))[12..32]);
         self.accounts.entry(contract_addr).or_default();
         self.accounts.get_mut(&contract_addr).unwrap().value = value;
 
@@ -95,7 +95,7 @@ impl Context for DummyContext {
             &CallInfo {
                 call_value: value,
                 calldata: vec![],
-                origin: U256::ZERO,
+                origin: U256::zero(),
                 caller: creator,
             },
         )?;
@@ -119,15 +119,15 @@ impl Context for DummyContext {
         let acc = self.accounts.entry(creator).or_default();
         if acc.value >= value {
             acc.value = acc.value - value;
-            acc.nonce = acc.nonce + U256::ONE;
+            acc.nonce = acc.nonce + U256::one();
         } else {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
         let mut inp = vec![0xffu8];
-        inp.extend(&creator.to_bytes_be()[12..32]);
-        inp.extend(&salt.to_bytes_be());
+        inp.extend(&creator.to_big_endian()[12..32]);
+        inp.extend(&salt.to_big_endian());
         inp.extend(&keccak(&code));
-        let contract_addr = U256::from_bytes_be(&keccak(&inp)[12..32]);
+        let contract_addr = U256::from_big_endian(&keccak(&inp)[12..32]);
         if self
             .accounts
             .get(&contract_addr)
@@ -144,7 +144,7 @@ impl Context for DummyContext {
             &CallInfo {
                 call_value: value,
                 calldata: vec![],
-                origin: U256::ZERO,
+                origin: U256::zero(),
                 caller: creator,
             },
         )?;
@@ -165,7 +165,7 @@ impl Context for DummyContext {
         let caller = self.accounts.entry(call_info.caller).or_default();
         if caller.value >= call_info.call_value {
             caller.value = caller.value - call_info.call_value;
-            caller.nonce = caller.nonce + U256::ONE;
+            caller.nonce = caller.nonce + U256::one();
         } else {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
@@ -247,12 +247,12 @@ mod tests {
         let increment_sig = [0xd0, 0x9d, 0xe0, 0x8a];
         let call = move |ctx: &mut DummyContext, inp: &[u8]| {
             ctx.call(
-                U256::ZERO,
+                U256::zero(),
                 contract_addr,
                 CallInfo {
-                    origin: U256::ZERO,
-                    caller: U256::ZERO,
-                    call_value: U256::ZERO,
+                    origin: U256::zero(),
+                    caller: U256::zero(),
+                    call_value: U256::zero(),
                     calldata: inp.to_vec(),
                 },
             )
@@ -261,16 +261,16 @@ mod tests {
         for i in 0..2000 {
             assert_eq!(
                 call(&mut ctx, &number_sig),
-                ExecutionResult::Returned(U256::from(i).to_bytes_be().to_vec())
+                ExecutionResult::Returned(U256::from(i).to_big_endian().to_vec())
             );
             assert_eq!(call(&mut ctx, &increment_sig), ExecutionResult::Halted);
         }
         let mut set_num_calldata = set_number_sig.to_vec();
-        set_num_calldata.extend(U256::from(12345).to_bytes_be());
+        set_num_calldata.extend(U256::from(12345).to_big_endian());
         assert_eq!(call(&mut ctx, &set_num_calldata), ExecutionResult::Halted);
         assert_eq!(
             call(&mut ctx, &number_sig),
-            ExecutionResult::Returned(U256::from(12345).to_bytes_be().to_vec())
+            ExecutionResult::Returned(U256::from(12345).to_big_endian().to_vec())
         );
     }
 
@@ -290,10 +290,10 @@ mod tests {
             code: vec![],
         });
         ctx.call(
-            U256::ZERO,
+            U256::zero(),
             234.into(),
             CallInfo {
-                origin: U256::ZERO,
+                origin: U256::zero(),
                 caller: 123.into(),
                 call_value: 2.into(),
                 calldata: vec![],
@@ -306,10 +306,10 @@ mod tests {
         assert_eq!(ctx.balance(234.into()).unwrap(), U256::from(2));
         assert_eq!(
             ctx.call(
-                U256::ZERO,
+                U256::zero(),
                 234.into(),
                 CallInfo {
-                    origin: U256::ZERO,
+                    origin: U256::zero(),
                     caller: 123.into(),
                     call_value: 4.into(),
                     calldata: vec![],
@@ -339,11 +339,11 @@ mod tests {
         assert_eq!(ctx.balance(contract_addr_1).unwrap(), U256::from(2));
         assert_eq!(ctx.balance(contract_addr_2).unwrap(), U256::from(2));
         assert_eq!(
-            contract_addr_1.to_string(),
+            contract_addr_1.hex(),
             "0x000000000000000000000000838fea66b9b3aae5120d989b4ab767396f2fcbf1".to_string()
         );
         assert_eq!(
-            contract_addr_2.to_string(),
+            contract_addr_2.hex(),
             "0x000000000000000000000000ae7fac60782bb47c1e93a68b344aa5aff8a644ba".to_string()
         );
     }
@@ -355,11 +355,11 @@ mod tests {
         assert!(res1.is_ok());
         assert!(res2.is_ok());
         assert_eq!(
-            res1.unwrap().to_string(),
+            res1.unwrap().hex(),
             "0x000000000000000000000000776fb1205e347d8388f4a39c9a2ca47d5afe0f41"
         );
         assert_eq!(
-            res2.unwrap().to_string(),
+            res2.unwrap().hex(),
             "0x000000000000000000000000554d4b57431778ac563b4f053bfd472a538edbe2"
         );
         assert_eq!(
