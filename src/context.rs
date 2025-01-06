@@ -180,6 +180,23 @@ impl Context for DummyContext {
 mod tests {
     use super::*;
 
+    /*
+       pragma solidity ^0.8.13;
+
+       contract Counter {
+           uint256 public number;
+
+           constructor() payable {}
+
+           function setNumber(uint256 newNumber) public {
+               number = newNumber;
+           }
+
+           function increment() public {
+               number++;
+           }
+       }
+    */
     const COUNTER_CODE: [u8; 252] = [
         96, 128, 96, 64, 82, 96, 236, 128, 97, 0, 16, 95, 57, 95, 243, 254, 96, 128, 96, 64, 82,
         52, 128, 21, 96, 14, 87, 95, 128, 253, 91, 80, 96, 4, 54, 16, 96, 58, 87, 95, 53, 96, 224,
