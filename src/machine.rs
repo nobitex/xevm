@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::context::Context;
+use crate::context::{Context, Info};
 use crate::error::{ExecError, RevertError};
 use crate::opcodes::*;
 use crate::u256::U256;
@@ -83,23 +83,23 @@ impl Machine {
         opcode_table.insert(0x37, Box::new(OpcodeCalldataCopy));
         opcode_table.insert(0x38, Box::new(OpcodeCodeSize));
         opcode_table.insert(0x39, Box::new(OpcodeCodeCopy));
-        /*opcode_table.insert(0x3a, Box::new(OpcodeGasPrice));
-        opcode_table.insert(0x3b, Box::new(OpcodeExtCodeSize));
-        opcode_table.insert(0x3c, Box::new(OpcodeExtCodeCopy));
-        opcode_table.insert(0x3d, Box::new(OpcodeReturnDataSize));
-        opcode_table.insert(0x3e, Box::new(OpcodeReturnDataCopy));
-        opcode_table.insert(0x3f, Box::new(OpcodeExtCodeHash));
-        opcode_table.insert(0x40, Box::new(OpcodeBlockHash));
-        opcode_table.insert(0x41, Box::new(OpcodeCoinbase));
-        opcode_table.insert(0x42, Box::new(OpcodeTimestamp));
-        opcode_table.insert(0x43, Box::new(OpcodeNumber));
-        opcode_table.insert(0x44, Box::new(OpcodePrevRandao));
-        opcode_table.insert(0x45, Box::new(OpcodeGasLimit));
-        opcode_table.insert(0x46, Box::new(OpcodeChainId));
-        opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
-        opcode_table.insert(0x48, Box::new(OpcodeBaseFee));
-        opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
-        opcode_table.insert(0x4a, Box::new(OpcodeBlobBaseFee));*/
+        opcode_table.insert(0x3a, Box::new(OpcodeInfo(Info::GasPrice)));
+        // opcode_table.insert(0x3b, Box::new(OpcodeExtCodeSize));
+        // opcode_table.insert(0x3c, Box::new(OpcodeExtCodeCopy));
+        // opcode_table.insert(0x3d, Box::new(OpcodeReturnDataSize));
+        // opcode_table.insert(0x3e, Box::new(OpcodeReturnDataCopy));
+        // opcode_table.insert(0x3f, Box::new(OpcodeExtCodeHash));
+        // opcode_table.insert(0x40, Box::new(OpcodeBlockHash));
+        opcode_table.insert(0x41, Box::new(OpcodeInfo(Info::Coinbase)));
+        opcode_table.insert(0x42, Box::new(OpcodeInfo(Info::Timestamp)));
+        opcode_table.insert(0x43, Box::new(OpcodeInfo(Info::Number)));
+        opcode_table.insert(0x44, Box::new(OpcodeInfo(Info::PrevRandao)));
+        //opcode_table.insert(0x45, Box::new(OpcodeGasLimit));
+        opcode_table.insert(0x46, Box::new(OpcodeInfo(Info::ChainId)));
+        //opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
+        opcode_table.insert(0x48, Box::new(OpcodeInfo(Info::BaseFee)));
+        //opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
+        opcode_table.insert(0x4a, Box::new(OpcodeInfo(Info::BlobBaseFee)));
 
         opcode_table.insert(0x50, Box::new(OpcodePop));
         opcode_table.insert(0x51, Box::new(OpcodeMload));

@@ -7,7 +7,21 @@ use crate::{
 };
 use std::{collections::HashMap, error::Error};
 
+#[derive(Debug, Clone, Copy)]
+pub enum Info {
+    GasPrice,
+    Coinbase,
+    Timestamp,
+    Number,
+    PrevRandao,
+    GasLimit,
+    ChainId,
+    BaseFee,
+    BlobBaseFee,
+}
+
 pub trait Context {
+    fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>>;
     fn create(&mut self, creator: U256, value: U256, code: Vec<u8>) -> Result<U256, ExecError>;
     fn create2(
         &mut self,
@@ -58,6 +72,11 @@ fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
 }
 
 impl Context for DummyContext {
+    fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>> {
+        match inf {
+            _ => Ok(U256::ZERO),
+        }
+    }
     fn create(&mut self, creator: U256, value: U256, code: Vec<u8>) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(creator).or_default();
         if acc.value >= value {

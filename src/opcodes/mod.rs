@@ -4,6 +4,7 @@ mod create;
 mod dup;
 mod external;
 mod halt;
+mod info;
 mod jump;
 mod keccak;
 mod log;
@@ -14,7 +15,6 @@ mod push;
 mod ret;
 mod revert;
 mod swap;
-
 pub use call::OpcodeCall;
 pub use cmp::{OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt, OpcodeSgt, OpcodeSlt};
 pub use create::{OpcodeCreate, OpcodeCreate2};
@@ -24,6 +24,7 @@ pub use external::{
     OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy, OpcodeCodeSize, OpcodeOrigin,
 };
 pub use halt::OpcodeHalt;
+pub use info::OpcodeInfo;
 pub use jump::{OpcodeJump, OpcodeJumpDest, OpcodeJumpi};
 pub use keccak::OpcodeKeccak;
 pub use log::OpcodeLog;
@@ -85,13 +86,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
 mod tests {
     use std::error::Error;
 
-    use crate::u256::U256;
+    use crate::{context::Info, u256::U256};
 
     use super::*;
 
     #[derive(Clone, Debug, Default)]
     pub struct TestContext;
     impl Context for TestContext {
+        fn info(&self, _inf: Info) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
         fn create(
             &mut self,
             _creator: U256,
