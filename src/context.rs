@@ -49,8 +49,9 @@ pub struct Account {
     code: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct DummyContext {
+#[derive(Clone, Default)]
+pub struct MiniEthereum {
+    precompiles: HashMap<U256, &'static dyn Fn(CallInfo) -> Result<ExecutionResult, ExecError>>,
     accounts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
@@ -71,7 +72,22 @@ fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
     rlp
 }
 
-impl Context for DummyContext {
+fn ecrecover(_call_info: CallInfo) -> Result<ExecutionResult, ExecError> {
+    Err(ExecError::Revert(RevertError::UnknownOpcode(0x0)))
+}
+
+impl MiniEthereum {
+    pub fn new() -> Self {
+        let ecrecover: &'static dyn Fn(CallInfo) -> Result<ExecutionResult, ExecError> = &ecrecover;
+        Self {
+            precompiles: [(U256::from(0), ecrecover)].into_iter().collect(),
+            accounts: HashMap::new(),
+            mem: HashMap::new(),
+        }
+    }
+}
+
+impl Context for MiniEthereum {
     fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>> {
         match inf {
             _ => Ok(U256::zero()),
@@ -162,6 +178,9 @@ impl Context for DummyContext {
         address: U256,
         call_info: CallInfo,
     ) -> Result<ExecutionResult, ExecError> {
+        if let Some(precompile) = self.precompiles.get(&address) {
+            return precompile(call_info);
+        }
         let caller = self.accounts.entry(call_info.caller).or_default();
         if caller.value >= call_info.call_value {
             caller.value = caller.value - call_info.call_value;
@@ -233,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_counter_contract() {
-        let mut ctx = DummyContext::default();
+        let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(123.into()).or_insert(Account {
             nonce: 0.into(),
             value: 5.into(),
@@ -245,7 +264,7 @@ mod tests {
         let number_sig = [0x83, 0x81, 0xf5, 0x8a];
         let set_number_sig = [0x3f, 0xb5, 0xc1, 0xcb];
         let increment_sig = [0xd0, 0x9d, 0xe0, 0x8a];
-        let call = move |ctx: &mut DummyContext, inp: &[u8]| {
+        let call = move |ctx: &mut MiniEthereum, inp: &[u8]| {
             ctx.call(
                 U256::zero(),
                 contract_addr,
@@ -276,14 +295,14 @@ mod tests {
 
     #[test]
     fn test_context() {
-        let mut ctx = DummyContext::default();
+        let mut ctx = MiniEthereum::default();
         ctx.create(123.into(), 0.into(), COUNTER_CODE.to_vec())
             .unwrap();
     }
 
     #[test]
     fn test_call() {
-        let mut ctx = DummyContext::default();
+        let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(123.into()).or_insert(Account {
             nonce: 0.into(),
             value: 5.into(),
@@ -321,7 +340,7 @@ mod tests {
 
     #[test]
     fn test_create() {
-        let mut ctx = DummyContext::default();
+        let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(123.into()).or_insert(Account {
             nonce: 0.into(),
             value: 5.into(),
@@ -349,7 +368,7 @@ mod tests {
     }
     #[test]
     fn test_context_prevent_redeploy() {
-        let mut ctx = DummyContext::default();
+        let mut ctx = MiniEthereum::default();
         let res1 = ctx.create2(123.into(), 0.into(), COUNTER_CODE.to_vec(), 123.into());
         let res2 = ctx.create2(123.into(), 0.into(), COUNTER_CODE.to_vec(), 234.into());
         assert!(res1.is_ok());
