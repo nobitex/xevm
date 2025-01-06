@@ -63,8 +63,8 @@ pub trait OpcodeHandler<C: Context> {
 }
 
 #[derive(Debug)]
-pub struct OpcodeUnimplemented(pub u8);
-impl<C: Context> OpcodeHandler<C> for OpcodeUnimplemented {
+pub struct OpcodeUnsupported(pub u8);
+impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
     fn call(
         &self,
         _ctx: &mut C,
@@ -73,7 +73,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeUnimplemented {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         Err(ExecError::Context(
             format!(
-                "Opcode 0x{:02x} is not implemented! Feel free to open a PR! :)",
+                "Opcode 0x{:02x} is not supported! Feel free to open a PR! :)",
                 self.0
             )
             .into(),

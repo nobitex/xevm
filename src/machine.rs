@@ -47,14 +47,14 @@ impl Machine {
         opcode_table.insert(0x02, Box::new(OpcodeMul));
 
         opcode_table.insert(0x03, Box::new(OpcodeSub));
-        opcode_table.insert(0x04, Box::new(OpcodeUnimplemented(0x04))); // OpcodeDiv
-        opcode_table.insert(0x05, Box::new(OpcodeUnimplemented(0x05))); // OpcodeSdiv
-        opcode_table.insert(0x06, Box::new(OpcodeUnimplemented(0x06))); // OpcodeMod
-        opcode_table.insert(0x07, Box::new(OpcodeUnimplemented(0x07))); // OpcodeSmod
-        opcode_table.insert(0x08, Box::new(OpcodeUnimplemented(0x08))); // OpcodeAddMod
-        opcode_table.insert(0x09, Box::new(OpcodeUnimplemented(0x09))); // OpcodeMulMod
-        opcode_table.insert(0x0a, Box::new(OpcodeUnimplemented(0x0a))); // OpcodeExp
-        opcode_table.insert(0x0b, Box::new(OpcodeUnimplemented(0x0b))); // OpcodeSignExtend
+        opcode_table.insert(0x04, Box::new(OpcodeUnsupported(0x04))); // OpcodeDiv
+        opcode_table.insert(0x05, Box::new(OpcodeUnsupported(0x05))); // OpcodeSdiv
+        opcode_table.insert(0x06, Box::new(OpcodeUnsupported(0x06))); // OpcodeMod
+        opcode_table.insert(0x07, Box::new(OpcodeUnsupported(0x07))); // OpcodeSmod
+        opcode_table.insert(0x08, Box::new(OpcodeUnsupported(0x08))); // OpcodeAddMod
+        opcode_table.insert(0x09, Box::new(OpcodeUnsupported(0x09))); // OpcodeMulMod
+        opcode_table.insert(0x0a, Box::new(OpcodeUnsupported(0x0a))); // OpcodeExp
+        opcode_table.insert(0x0b, Box::new(OpcodeUnsupported(0x0b))); // OpcodeSignExtend
 
         opcode_table.insert(0x10, Box::new(OpcodeLt));
         opcode_table.insert(0x11, Box::new(OpcodeGt));
@@ -129,17 +129,16 @@ impl Machine {
 
         opcode_table.insert(0xf0, Box::new(OpcodeCreate));
         opcode_table.insert(0xf1, Box::new(OpcodeCall::Call));
-        //opcode_table.insert(0xf2, Box::new(OpcodeCallCode));
+        opcode_table.insert(0xf2, Box::new(OpcodeUnsupported(0xf2)));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
         opcode_table.insert(0xf2, Box::new(OpcodeCall::DelegateCall));
         opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
         opcode_table.insert(0xfa, Box::new(OpcodeCall::StaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
-        //opcode_table.insert(0xfa, Box::new(OpcodeSelfDestruct));
+        opcode_table.insert(0xff, Box::new(OpcodeUnsupported(0xff)));
 
         while self.pc < self.code.len() {
             let opcode = self.code[self.pc];
-            //println!("0x{:x}", opcode);
             if let Some(opcode_fn) = opcode_table.get(&opcode) {
                 if let Some(res) = opcode_fn.call(ctx, &mut self, call_info)? {
                     return Ok(res);
