@@ -22,6 +22,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeKeccak {
         let data = machine.mem_get(offset, size);
         let res = keccak(&data);
         machine.stack.push(U256::from_big_endian(&res));
-        Ok(Some(ExecutionResult::Halted))
+        machine.pc += 1;
+        Ok(None)
     }
 }
