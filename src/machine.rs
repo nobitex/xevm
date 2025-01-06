@@ -43,33 +43,32 @@ impl Machine {
     ) -> Result<ExecutionResult, ExecError> {
         let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
         opcode_table.insert(0x00, Box::new(OpcodeHalt));
-        opcode_table.insert(0x01, Box::new(OpcodeAdd));
-        opcode_table.insert(0x02, Box::new(OpcodeMul));
+        opcode_table.insert(0x01, Box::new(OpcodeBinaryOp::Add));
+        opcode_table.insert(0x02, Box::new(OpcodeBinaryOp::Mul));
+        opcode_table.insert(0x03, Box::new(OpcodeBinaryOp::Sub));
+        opcode_table.insert(0x04, Box::new(OpcodeBinaryOp::Div));
+        opcode_table.insert(0x05, Box::new(OpcodeBinaryOp::Sdiv));
+        opcode_table.insert(0x06, Box::new(OpcodeBinaryOp::Mod));
+        opcode_table.insert(0x07, Box::new(OpcodeBinaryOp::Smod));
+        opcode_table.insert(0x08, Box::new(OpcodeUnsupported(0x08)));
+        opcode_table.insert(0x09, Box::new(OpcodeUnsupported(0x09)));
+        opcode_table.insert(0x0a, Box::new(OpcodeBinaryOp::Exp));
+        opcode_table.insert(0x0b, Box::new(OpcodeUnsupported(0x0b)));
 
-        opcode_table.insert(0x03, Box::new(OpcodeSub));
-        opcode_table.insert(0x04, Box::new(OpcodeUnsupported(0x04))); // OpcodeDiv
-        opcode_table.insert(0x05, Box::new(OpcodeUnsupported(0x05))); // OpcodeSdiv
-        opcode_table.insert(0x06, Box::new(OpcodeUnsupported(0x06))); // OpcodeMod
-        opcode_table.insert(0x07, Box::new(OpcodeUnsupported(0x07))); // OpcodeSmod
-        opcode_table.insert(0x08, Box::new(OpcodeUnsupported(0x08))); // OpcodeAddMod
-        opcode_table.insert(0x09, Box::new(OpcodeUnsupported(0x09))); // OpcodeMulMod
-        opcode_table.insert(0x0a, Box::new(OpcodeUnsupported(0x0a))); // OpcodeExp
-        opcode_table.insert(0x0b, Box::new(OpcodeUnsupported(0x0b))); // OpcodeSignExtend
-
-        opcode_table.insert(0x10, Box::new(OpcodeLt));
-        opcode_table.insert(0x11, Box::new(OpcodeGt));
-        opcode_table.insert(0x12, Box::new(OpcodeSlt));
-        opcode_table.insert(0x13, Box::new(OpcodeSgt));
-        opcode_table.insert(0x14, Box::new(OpcodeEq));
-        opcode_table.insert(0x15, Box::new(OpcodeIsZero));
-        opcode_table.insert(0x16, Box::new(OpcodeAnd));
-        opcode_table.insert(0x17, Box::new(OpcodeOr));
-        opcode_table.insert(0x18, Box::new(OpcodeXor));
-        opcode_table.insert(0x19, Box::new(OpcodeNot));
-        opcode_table.insert(0x1a, Box::new(OpcodeByte));
-        opcode_table.insert(0x1b, Box::new(OpcodeShl));
-        opcode_table.insert(0x1c, Box::new(OpcodeShr));
-        opcode_table.insert(0x1d, Box::new(OpcodeSar));
+        opcode_table.insert(0x10, Box::new(OpcodeBinaryOp::Lt));
+        opcode_table.insert(0x11, Box::new(OpcodeBinaryOp::Gt));
+        opcode_table.insert(0x12, Box::new(OpcodeBinaryOp::Slt));
+        opcode_table.insert(0x13, Box::new(OpcodeBinaryOp::Sgt));
+        opcode_table.insert(0x14, Box::new(OpcodeBinaryOp::Eq));
+        opcode_table.insert(0x15, Box::new(OpcodeUnaryOp::IsZero));
+        opcode_table.insert(0x16, Box::new(OpcodeBinaryOp::And));
+        opcode_table.insert(0x17, Box::new(OpcodeBinaryOp::Or));
+        opcode_table.insert(0x18, Box::new(OpcodeBinaryOp::Xor));
+        opcode_table.insert(0x19, Box::new(OpcodeUnaryOp::Not));
+        opcode_table.insert(0x1a, Box::new(OpcodeBinaryOp::Byte));
+        opcode_table.insert(0x1b, Box::new(OpcodeBinaryOp::Shl));
+        opcode_table.insert(0x1c, Box::new(OpcodeBinaryOp::Shr));
+        opcode_table.insert(0x1d, Box::new(OpcodeBinaryOp::Sar));
 
         opcode_table.insert(0x20, Box::new(OpcodeKeccak));
 

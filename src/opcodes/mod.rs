@@ -1,5 +1,4 @@
 mod call;
-mod cmp;
 mod create;
 mod dup;
 mod external;
@@ -16,7 +15,6 @@ mod ret;
 mod revert;
 mod swap;
 pub use call::OpcodeCall;
-pub use cmp::{OpcodeEq, OpcodeGt, OpcodeIsZero, OpcodeLt, OpcodeSgt, OpcodeSlt};
 pub use create::{OpcodeCreate, OpcodeCreate2};
 pub use dup::OpcodeDup;
 pub use external::{
@@ -32,10 +30,7 @@ pub use memory::{
     OpcodeMcopy, OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload,
     OpcodeTstore,
 };
-pub use ops::{
-    OpcodeAdd, OpcodeAnd, OpcodeByte, OpcodeMul, OpcodeNot, OpcodeOr, OpcodeSar, OpcodeShl,
-    OpcodeShr, OpcodeSub, OpcodeXor,
-};
+pub use ops::{OpcodeBinaryOp, OpcodeNot, OpcodeUnaryOp};
 pub use pop::OpcodePop;
 pub use push::OpcodePush;
 pub use ret::OpcodeReturn;

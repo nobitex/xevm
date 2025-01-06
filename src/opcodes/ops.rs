@@ -2,175 +2,110 @@ use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
 use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::u256::U256;
 
-#[derive(Debug)]
-pub struct OpcodeAdd;
-impl<C: Context> OpcodeHandler<C> for OpcodeAdd {
+pub enum OpcodeBinaryOp {
+    Add,
+    Mul,
+    Sub,
+    Div,
+    Sdiv,
+    Mod,
+    Smod,
+    Exp,
+    Shl,
+    Shr,
+    Sar,
+    And,
+    Or,
+    Xor,
+    Byte,
+    Lt,
+    Gt,
+    Slt,
+    Sgt,
+    Eq,
+    SignExtend,
+}
+
+pub enum OpcodeUnaryOp {
+    IsZero,
+    Not,
+}
+
+impl<C: Context> OpcodeHandler<C> for OpcodeUnaryOp {
     fn call(
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let a = machine.pop_stack()?;
+        machine.stack.push(match self {
+            Self::IsZero => U256::from((a == U256::zero()) as u64),
+            Self::Not => !a,
+        });
+        machine.pc += 1;
+        Ok(None)
+    }
+}
 
+impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
-        machine.stack.push(a + b);
-        machine.gas_used += 3;
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeSub;
-impl<C: Context> OpcodeHandler<C> for OpcodeSub {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a - b);
-        machine.gas_used += 3;
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeMul;
-impl<C: Context> OpcodeHandler<C> for OpcodeMul {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a * b);
-        machine.gas_used += 5;
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeShl;
-impl<C: Context> OpcodeHandler<C> for OpcodeShl {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let shift = machine.pop_stack()?;
-        let val = machine.pop_stack()?;
-        machine.stack.push(val << shift);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeShr;
-impl<C: Context> OpcodeHandler<C> for OpcodeShr {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let shift = machine.pop_stack()?;
-        let val = machine.pop_stack()?;
-        machine.stack.push(val >> shift);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeSar;
-impl<C: Context> OpcodeHandler<C> for OpcodeSar {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let shift = machine.pop_stack()?;
-        let val = machine.pop_stack()?;
-        let mut result = val >> shift;
-        if val.is_neg() {
-            let addition = U256::MAX << (U256::from(256) - shift);
-            result = result + addition;
-        }
-        machine.stack.push(result);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeAnd;
-impl<C: Context> OpcodeHandler<C> for OpcodeAnd {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a & b);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeOr;
-impl<C: Context> OpcodeHandler<C> for OpcodeOr {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a | b);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeXor;
-impl<C: Context> OpcodeHandler<C> for OpcodeXor {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        let b = machine.pop_stack()?;
-        machine.stack.push(a ^ b);
+        machine.stack.push(match self {
+            Self::Add => a + b,
+            Self::Mul => a * b,
+            Self::Sub => a - b,
+            Self::Div => a / b,
+            Self::Sdiv => a / b,
+            Self::Mod => a % b,
+            Self::Smod => a % b,
+            Self::Exp => a.pow(b),
+            Self::Shl => b << a,
+            Self::Shr => b >> a,
+            Self::And => a & b,
+            Self::Or => a | b,
+            Self::Xor => a ^ b,
+            Self::Lt => U256::from((a < b) as u64),
+            Self::Gt => U256::from((a > b) as u64),
+            Self::Slt => U256::from(match (a.is_neg(), b.is_neg()) {
+                (false, false) => a < b,
+                (false, true) => false,
+                (true, false) => true,
+                (true, true) => -a > -b,
+            } as u64),
+            Self::Sgt => U256::from(match (a.is_neg(), b.is_neg()) {
+                (false, false) => a > b,
+                (false, true) => true,
+                (true, false) => false,
+                (true, true) => -a < -b,
+            } as u64),
+            Self::Eq => U256::from((a == b) as u64),
+            Self::Byte => {
+                let i = a.to_usize()?;
+                let x = b.to_big_endian();
+                U256::from(if i < 32 { x[i] as u64 } else { 0 })
+            }
+            Self::Sar => {
+                let mut result = b >> a;
+                if b.is_neg() {
+                    let addition = U256::MAX << (U256::from(256) - a);
+                    result += addition;
+                }
+                result
+            }
+            Self::SignExtend => return Err(ExecError::Revert(RevertError::UnknownOpcode(0x0b))),
+        });
         machine.pc += 1;
         Ok(None)
     }
@@ -183,31 +118,10 @@ impl<C: Context> OpcodeHandler<C> for OpcodeNot {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         machine.stack.push(!a);
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeByte;
-impl<C: Context> OpcodeHandler<C> for OpcodeByte {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let i = machine.pop_stack()?.to_usize()?;
-        let x = machine.pop_stack()?.to_big_endian();
-        machine
-            .stack
-            .push(U256::from(if i < 32 { x[i] as u64 } else { 0 }));
         machine.pc += 1;
         Ok(None)
     }
@@ -221,7 +135,7 @@ mod tests {
     #[test]
     fn test_opcode_sar() {
         test(
-            OpcodeSar,
+            OpcodeBinaryOp::Sar,
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
@@ -242,6 +156,120 @@ mod tests {
                     Some(&[U256::MAX >> U256::from(129)]),
                 ),
                 (&[U256::from(128), U256::MAX], Some(&[U256::MAX])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_lt() {
+        test(
+            OpcodeBinaryOp::Lt,
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
+                (
+                    &[U256::MAX, U256::MAX - U256::from(123)],
+                    Some(&[U256::zero()]),
+                ),
+                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
+                (
+                    &[U256::MAX - U256::from(123), U256::MAX],
+                    Some(&[U256::one()]),
+                ),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_gt() {
+        test(
+            OpcodeBinaryOp::Gt,
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
+                (
+                    &[U256::MAX, U256::MAX - U256::from(123)],
+                    Some(&[U256::one()]),
+                ),
+                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
+                (
+                    &[U256::MAX - U256::from(123), U256::MAX],
+                    Some(&[U256::zero()]),
+                ),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_slt() {
+        test(
+            OpcodeBinaryOp::Slt,
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::one()])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::zero()])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::one()])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_sgt() {
+        test(
+            OpcodeBinaryOp::Sgt,
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::one()])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::one()])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::zero()])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_eq() {
+        test(
+            OpcodeBinaryOp::Eq,
+            &[
+                (&[], None),
+                (&[U256::from(123)], None),
+                (&[U256::from(0), U256::from(0)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(122)], Some(&[U256::zero()])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::one()])),
+                (&[U256::MAX, U256::MAX - U256::one()], Some(&[U256::zero()])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_is_zero() {
+        test(
+            OpcodeUnaryOp::IsZero,
+            &[
+                (&[], None),
+                (&[U256::from(0)], Some(&[U256::one()])),
+                (&[U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::MAX], Some(&[U256::zero()])),
+                (&[U256::MAX - U256::one()], Some(&[U256::zero()])),
             ],
         );
     }
