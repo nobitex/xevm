@@ -19,7 +19,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate {
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
         let code = machine.mem_get(offset, size);
-        let addr = ctx.create(call_info.caller, value, code)?;
+        let addr = ctx.create(CallInfo {
+            origin: call_info.origin,
+            caller: call_info.caller,
+            call_value: value,
+            calldata: code,
+        })?;
         machine.stack.push(addr);
         machine.pc += 1;
         Ok(None)
@@ -40,7 +45,15 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate2 {
         let size = machine.pop_stack()?.to_usize()?;
         let salt = machine.pop_stack()?;
         let code = machine.mem_get(offset, size);
-        let addr = ctx.create2(call_info.caller, value, code, salt)?;
+        let addr = ctx.create2(
+            CallInfo {
+                origin: call_info.origin,
+                caller: call_info.caller,
+                call_value: value,
+                calldata: code,
+            },
+            salt,
+        )?;
         machine.stack.push(addr);
         machine.pc += 1;
         Ok(None)

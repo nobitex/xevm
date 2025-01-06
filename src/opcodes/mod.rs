@@ -92,21 +92,10 @@ mod tests {
         fn info(&self, _inf: Info) -> Result<U256, Box<dyn Error>> {
             unimplemented!()
         }
-        fn create(
-            &mut self,
-            _creator: U256,
-            _value: U256,
-            _code: Vec<u8>,
-        ) -> Result<U256, ExecError> {
+        fn create(&mut self, _call_info: CallInfo) -> Result<U256, ExecError> {
             unimplemented!()
         }
-        fn create2(
-            &mut self,
-            _creator: U256,
-            _value: U256,
-            _code: Vec<u8>,
-            _salt: U256,
-        ) -> Result<U256, ExecError> {
+        fn create2(&mut self, _call_info: CallInfo, _salt: U256) -> Result<U256, ExecError> {
             unimplemented!()
         }
         fn call(
