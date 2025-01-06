@@ -36,6 +36,33 @@ pub enum OpcodeUnaryOp {
     Not,
 }
 
+pub enum OpcodeModularOp {
+    AddMod,
+    MulMod,
+}
+
+impl<C: Context> OpcodeHandler<C> for OpcodeModularOp {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let a = machine.pop_stack()?.as_u512();
+        let b = machine.pop_stack()?.as_u512();
+        let n = machine.pop_stack()?.as_u512();
+        machine.stack.push(
+            match self {
+                Self::AddMod => (a + b) % n,
+                Self::MulMod => (a * b) % n,
+            }
+            .low_u256(),
+        );
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
 impl<C: Context> OpcodeHandler<C> for OpcodeUnaryOp {
     fn call(
         &self,
@@ -106,22 +133,6 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
             }
             Self::SignExtend => return Err(ExecError::Revert(RevertError::UnknownOpcode(0x0b))),
         });
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeNot;
-impl<C: Context> OpcodeHandler<C> for OpcodeNot {
-    fn call(
-        &self,
-        _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?;
-        machine.stack.push(!a);
         machine.pc += 1;
         Ok(None)
     }

@@ -7,7 +7,20 @@ construct_uint! {
     pub struct U256(4);
 }
 
+construct_uint! {
+    pub struct U512(8);
+}
+
+impl U512 {
+    pub fn low_u256(&self) -> U256 {
+        U256::from_little_endian(&self.to_little_endian()[..4])
+    }
+}
+
 impl U256 {
+    pub fn as_u512(&self) -> U512 {
+        U512::from_little_endian(&self.to_little_endian())
+    }
     pub fn to_usize(&self) -> Result<usize, RevertError> {
         if *self > Self::from(usize::MAX) {
             Err(RevertError::OffsetSizeTooLarge)

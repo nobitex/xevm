@@ -50,8 +50,8 @@ impl Machine {
         opcode_table.insert(0x05, Box::new(OpcodeBinaryOp::Sdiv));
         opcode_table.insert(0x06, Box::new(OpcodeBinaryOp::Mod));
         opcode_table.insert(0x07, Box::new(OpcodeBinaryOp::Smod));
-        opcode_table.insert(0x08, Box::new(OpcodeUnsupported(0x08)));
-        opcode_table.insert(0x09, Box::new(OpcodeUnsupported(0x09)));
+        opcode_table.insert(0x08, Box::new(OpcodeModularOp::AddMod));
+        opcode_table.insert(0x09, Box::new(OpcodeModularOp::MulMod));
         opcode_table.insert(0x0a, Box::new(OpcodeBinaryOp::Exp));
         opcode_table.insert(0x0b, Box::new(OpcodeUnsupported(0x0b)));
 

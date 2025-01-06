@@ -14,6 +14,7 @@ mod push;
 mod ret;
 mod revert;
 mod swap;
+
 pub use call::OpcodeCall;
 pub use create::{OpcodeCreate, OpcodeCreate2};
 pub use dup::OpcodeDup;
@@ -30,7 +31,7 @@ pub use memory::{
     OpcodeMcopy, OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload,
     OpcodeTstore,
 };
-pub use ops::{OpcodeBinaryOp, OpcodeNot, OpcodeUnaryOp};
+pub use ops::{OpcodeBinaryOp, OpcodeModularOp, OpcodeUnaryOp};
 pub use pop::OpcodePop;
 pub use push::OpcodePush;
 pub use ret::OpcodeReturn;
