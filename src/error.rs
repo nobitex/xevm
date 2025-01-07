@@ -29,6 +29,7 @@ pub enum RevertError {
     ContractAlreadyDeployed,
     BlockHashUnavailable,
     ReturnDataUnavailable,
+    OutOfBounds,
 }
 
 impl From<Box<dyn Error>> for ExecError {

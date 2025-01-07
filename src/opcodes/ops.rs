@@ -173,11 +173,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
             }
             Self::SignExtend => {
                 let bytes_1 = a.to_usize()?;
+                if bytes_1 > 31 {
+                    return Err(ExecError::Revert(RevertError::OutOfBounds));
+                }
+                let bytes = bytes_1 + 1;
                 let is_neg = b.bit(bytes_1 * 8 + 7);
+                let x = b << (256 - bytes * 8) >> (256 - bytes * 8);
                 if is_neg {
-                    b + U256::MAX << ((bytes_1 + 1) * 8)
+                    x.overflowing_add(U256::MAX << ((bytes_1 + 1) * 8)).0
                 } else {
-                    b
+                    x
                 }
             }
         });
@@ -375,6 +380,39 @@ mod tests {
                     &[U256::from(123), -U256::from(100)],
                     Some(&[-U256::from(77)]),
                 ),
+            ],
+        );
+    }
+    #[test]
+    fn test_sign_extend() {
+        test(
+            OpcodeBinaryOp::SignExtend,
+            &[
+                (&[U256::from(0), U256::from(0xff)], Some(&[U256::MAX])),
+                (
+                    &[U256::from(0), U256::from(0x7f)],
+                    Some(&[U256::from(0x7f)]),
+                ),
+                (&[U256::from(0), -U256::from(1)], Some(&[-U256::from(1)])),
+                (
+                    &[U256::from(1), U256::from(0x1234)],
+                    Some(&[U256::from(0x1234)]),
+                ),
+                (
+                    &[U256::from(1), U256::from(0x8234)],
+                    Some(&[-U256::from(32204)]),
+                ),
+                (
+                    &[U256::from(2), U256::from(0x8234)],
+                    Some(&[U256::from(0x8234)]),
+                ),
+                (
+                    &[U256::from(31), U256::from(0x8234)],
+                    Some(&[U256::from(0x8234)]),
+                ),
+                (&[U256::from(32), U256::from(0x8234)], None),
+                (&[U256::MAX, U256::from(0x8234)], None),
+                (&[U256::from(31), U256::MAX], Some(&[U256::MAX])),
             ],
         );
     }
