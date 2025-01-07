@@ -3,7 +3,6 @@ use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Word;
-use crate::u256::U256;
 
 use super::OpcodeHandler;
 use crate::context::Context;

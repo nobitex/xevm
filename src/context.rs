@@ -49,7 +49,8 @@ pub struct Account {
 
 #[derive(Clone, Default)]
 pub struct MiniEthereum {
-    precompiles: HashMap<U256, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
+    precompiles:
+        HashMap<U256, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
     pub accounts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
@@ -76,7 +77,8 @@ fn ecrecover(_call_info: CallInfo<U256>) -> Result<ExecutionResult, ExecError> {
 
 impl MiniEthereum {
     pub fn new() -> Self {
-        let ecrecover: &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError> = &ecrecover;
+        let ecrecover: &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError> =
+            &ecrecover;
         Self {
             precompiles: [(U256::from(0), ecrecover)].into_iter().collect(),
             accounts: HashMap::new(),

@@ -19,6 +19,52 @@ impl Word for U256 {
     const ZERO: Self = Self::zero();
     const ONE: Self = Self::one();
     const BITS: usize = 256;
+    fn add(self, other: Self) -> Self {
+        self.overflowing_add(other).0
+    }
+    fn sub(self, other: Self) -> Self {
+        self.overflowing_sub(other).0
+    }
+    fn mul(self, other: Self) -> Self {
+        self.overflowing_mul(other).0
+    }
+    fn addmod(self, other: Self, n: Self) -> Self {
+        ((self.as_u512() + other.as_u512()) % n.as_u512()).low_u256()
+    }
+    fn mulmod(self, other: Self, n: Self) -> Self {
+        ((self.as_u512() * other.as_u512()) % n.as_u512()).low_u256()
+    }
+    fn and(self, other: Self) -> Self {
+        self & other
+    }
+    fn div(self, other: Self) -> Self {
+        self / other
+    }
+    fn lt(self, other: Self) -> bool {
+        self < other
+    }
+    fn not(self) -> Self {
+        !self
+    }
+    fn or(self, other: Self) -> Self {
+        self | other
+    }
+    fn xor(self, other: Self) -> Self {
+        self ^ other
+    }
+    fn pow(self, other: Self) -> Self {
+        self.pow(other)
+    }
+    fn rem(self, other: Self) -> Self {
+        self % other
+    }
+    fn shl(self, other: Self) -> Self {
+        self << other
+    }
+    fn shr(self, other: Self) -> Self {
+        self >> other
+    }
+
     fn bit(&self, bit: usize) -> bool {
         self.bit(bit)
     }

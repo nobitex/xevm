@@ -6,7 +6,6 @@ use crate::keccak::keccak;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::machine::Word;
-use crate::u256::U256;
 
 #[derive(Debug)]
 pub struct OpcodeAddress;
@@ -161,9 +160,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataSize {
 
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine
-            .stack
-            .push(W::from(call_info.calldata.len() as u64));
+        machine.stack.push(W::from(call_info.calldata.len() as u64));
         machine.pc += 1;
         Ok(None)
     }

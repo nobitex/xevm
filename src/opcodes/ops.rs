@@ -6,7 +6,6 @@ use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::machine::Word;
-use crate::u256::U256;
 
 pub enum OpcodeBinaryOp {
     Add,
@@ -49,16 +48,13 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeModularOp {
         machine: &mut Machine<W>,
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        let a = machine.pop_stack()?.as_u512();
-        let b = machine.pop_stack()?.as_u512();
-        let n = machine.pop_stack()?.as_u512();
-        machine.stack.push(
-            match self {
-                Self::AddMod => (a + b) % n,
-                Self::MulMod => (a * b) % n,
-            }
-            .low_u256(),
-        );
+        let a = machine.pop_stack()?;
+        let b = machine.pop_stack()?;
+        let n = machine.pop_stack()?;
+        machine.stack.push(match self {
+            Self::AddMod => a.addmod(b, n),
+            Self::MulMod => a.mulmod(b, n),
+        });
         machine.pc += 1;
         Ok(None)
     }
@@ -74,7 +70,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnaryOp {
         let a = machine.pop_stack()?;
         machine.stack.push(match self {
             Self::IsZero => W::from((a == W::ZERO) as u64),
-            Self::Not => !a,
+            Self::Not => a.not(),
         });
         machine.pc += 1;
         Ok(None)
@@ -91,84 +87,82 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(match self {
-            Self::Add => a + b,
-            Self::Mul => a * b,
-            Self::Sub => a - b,
+            Self::Add => a.add(b),
+            Self::Mul => a.mul(b),
+            Self::Sub => a.sub(b),
             Self::Div => {
                 if b == W::ZERO {
                     W::ZERO
                 } else {
-                    a / b
+                    a.div(b)
                 }
             }
             Self::Sdiv => match (a.is_neg(), b.is_neg()) {
-                (false, false) => a / b,
-                (true, true) => -a / -b,
-                (false, true) => {
-                    -if a % -b == W::ZERO {
-                        a / -b
-                    } else {
-                        (a / -b) + W::ONE
-                    }
+                (false, false) => a.div(b),
+                (true, true) => a.neg().div(b.neg()),
+                (false, true) => if a.rem(b.neg()) == W::ZERO {
+                    a.div(b.neg())
+                } else {
+                    a.div(b.neg()).add(W::ONE)
                 }
-                (true, false) => {
-                    -if -a % b == W::ZERO {
-                        -a / b
-                    } else {
-                        (-a / b) + W::ONE
-                    }
+                .neg(),
+                (true, false) => if a.neg().rem(b) == W::ZERO {
+                    a.neg().div(b)
+                } else {
+                    a.neg().div(b).add(W::ONE)
                 }
+                .neg(),
             },
-            Self::Mod => a % b,
+            Self::Mod => a.rem(b),
             Self::Smod => match (a.is_neg(), b.is_neg()) {
-                (false, false) => a % b,
-                (true, true) => -(-a % -b),
+                (false, false) => a.rem(b),
+                (true, true) => a.neg().rem(b.neg()).neg(),
                 (false, true) => {
-                    if a % -b == W::ZERO {
+                    if a.rem(b.neg()) == W::ZERO {
                         W::ZERO
                     } else {
-                        -(-b - (a % -b))
+                        b.neg().sub(a.rem(b.neg())).neg()
                     }
                 }
                 (true, false) => {
-                    if -a % b == W::ZERO {
+                    if a.neg().rem(b) == W::ZERO {
                         W::ZERO
                     } else {
-                        b - (-a % b)
+                        b.sub(a.neg().rem(b))
                     }
                 }
             },
             Self::Exp => a.pow(b),
-            Self::Shl => b << a,
-            Self::Shr => b >> a,
-            Self::And => a & b,
-            Self::Or => a | b,
-            Self::Xor => a ^ b,
-            Self::Lt => U256::from((a < b) as u64),
-            Self::Gt => U256::from((a > b) as u64),
-            Self::Slt => U256::from(match (a.is_neg(), b.is_neg()) {
-                (false, false) => a < b,
+            Self::Shl => b.shl(a),
+            Self::Shr => b.shr(a),
+            Self::And => a.and(b),
+            Self::Or => a.or(b),
+            Self::Xor => a.xor(b),
+            Self::Lt => W::from((a < b) as u64),
+            Self::Gt => W::from((a > b) as u64),
+            Self::Slt => W::from(match (a.is_neg(), b.is_neg()) {
+                (false, false) => a.lt(b),
                 (false, true) => false,
                 (true, false) => true,
-                (true, true) => -a > -b,
+                (true, true) => a.neg().gt(b.neg()),
             } as u64),
-            Self::Sgt => U256::from(match (a.is_neg(), b.is_neg()) {
-                (false, false) => a > b,
+            Self::Sgt => W::from(match (a.is_neg(), b.is_neg()) {
+                (false, false) => a.gt(b),
                 (false, true) => true,
                 (true, false) => false,
-                (true, true) => -a < -b,
+                (true, true) => a.neg().lt(b.neg()),
             } as u64),
-            Self::Eq => U256::from((a == b) as u64),
+            Self::Eq => W::from((a == b) as u64),
             Self::Byte => {
                 let i = a.to_usize()?;
                 let x = b.to_big_endian();
                 W::from(if i < 32 { x[i] as u64 } else { 0 })
             }
             Self::Sar => {
-                let mut result = b >> a;
+                let mut result = b.shr(a);
                 if b.is_neg() {
-                    let addition = W::MAX << (W::from(256) - a);
-                    result = result + addition;
+                    let addition = W::MAX.shl(W::from(256).sub(a));
+                    result = result.add(addition);
                 }
                 result
             }
@@ -179,9 +173,11 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
                 }
                 let bytes = bytes_1 + 1;
                 let is_neg = b.bit(bytes_1 * 8 + 7);
-                let x = b << W::from((256 - bytes * 8) as u64) >> W::from((256 - bytes * 8) as u64);
+                let x = b
+                    .shl(W::from((256 - bytes * 8) as u64))
+                    .shr(W::from((256 - bytes * 8) as u64));
                 if is_neg {
-                    x + (W::MAX << W::from(((bytes_1 + 1) * 8) as u64))
+                    x.add(W::MAX.shl(W::from(((bytes_1 + 1) * 8) as u64)))
                 } else {
                     x
                 }

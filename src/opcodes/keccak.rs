@@ -2,7 +2,6 @@ use super::ExecutionResult;
 use crate::error::ExecError;
 use crate::keccak::keccak;
 use crate::machine::{CallInfo, Word};
-use crate::u256::U256;
 
 use super::OpcodeHandler;
 use crate::context::Context;

@@ -5,7 +5,6 @@ use crate::error::ExecError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::machine::Word;
-use crate::u256::U256;
 
 #[derive(Debug)]
 pub struct OpcodeSstore;

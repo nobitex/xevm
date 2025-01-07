@@ -1,11 +1,11 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::hash::Hash;
-use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
+use std::ops::{Add, Not};
 
 use crate::context::{Context, Info};
 use crate::error::{ExecError, RevertError};
 use crate::opcodes::*;
-use crate::u256::U256;
 
 #[derive(Debug, Clone, Default)]
 pub struct CallInfo<W: Word> {
@@ -16,28 +16,7 @@ pub struct CallInfo<W: Word> {
 }
 
 pub trait Word:
-    Clone
-    + Default
-    + Copy
-    + PartialEq
-    + Eq
-    + PartialOrd
-    + Ord
-    + Hash
-    + From<u64>
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Not<Output = Self>
-    + Neg<Output = Self>
-    + Not<Output = Self>
-    + BitAnd<Output = Self>
-    + BitOr<Output = Self>
-    + BitXor<Output = Self>
-    + Div<Output = Self>
-    + Rem<Output = Self>
-    + Shl<Self, Output = Self>
-    + Shr<Self, Output = Self>
+    Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + Ord + Hash + From<u64>
 {
     const MAX: Self;
     const ZERO: Self;
@@ -50,6 +29,27 @@ pub trait Word:
     fn to_usize(&self) -> Result<usize, ExecError>;
     fn from_big_endian(slice: &[u8]) -> Self;
     fn to_big_endian(&self) -> Vec<u8>;
+    fn add(self, other: Self) -> Self;
+    fn sub(self, other: Self) -> Self;
+    fn mul(self, other: Self) -> Self;
+    fn div(self, other: Self) -> Self;
+    fn rem(self, other: Self) -> Self;
+    fn shl(self, other: Self) -> Self;
+    fn shr(self, other: Self) -> Self;
+    fn and(self, other: Self) -> Self;
+    fn or(self, other: Self) -> Self;
+    fn xor(self, other: Self) -> Self;
+    fn pow(self, other: Self) -> Self;
+    fn not(self) -> Self;
+    fn neg(self) -> Self {
+        self.not().add(Self::ONE)
+    }
+    fn lt(self, other: Self) -> bool;
+    fn gt(self, other: Self) -> bool {
+        other.lt(self)
+    }
+    fn addmod(self, other: Self, n: Self) -> Self;
+    fn mulmod(self, other: Self, n: Self) -> Self;
 }
 
 #[derive(Debug, Clone, Default)]
