@@ -5,16 +5,16 @@ use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
-use crate::u256::U256;
+use crate::machine::Word;
 
 #[derive(Debug)]
 pub struct OpcodeJump;
-impl<C: Context> OpcodeHandler<C> for OpcodeJump {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeJump {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?.to_usize()?;
         if target >= machine.code.len() {
@@ -30,13 +30,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJump {
 
 #[derive(Debug)]
 pub struct OpcodeJumpDest;
-impl<C: Context> OpcodeHandler<C> for OpcodeJumpDest {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeJumpDest {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        _call_info: &CallInfo,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.pc += 1;
         Ok(None)
@@ -45,12 +45,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpDest {
 
 #[derive(Debug)]
 pub struct OpcodeJumpi;
-impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeJumpi {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?.to_usize()?;
         let cond = machine.pop_stack()?;
@@ -60,7 +60,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeJumpi {
         if machine.code[target] != 0x5b {
             return Err(ExecError::Revert(RevertError::InvalidJump));
         }
-        if cond != U256::zero() {
+        if cond != W::ZERO {
             machine.pc = target;
         } else {
             machine.pc += 1;

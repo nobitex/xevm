@@ -1,11 +1,11 @@
 [package]
 name = "xevm"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Tiny Ethereum virtual machine written in pure Rust"
 license = "MIT"
 
 [dependencies]
-uint = "0.10"
 sha3 = "0.10.8"
 anyhow = "1.0"
+alloy_primitives = { package = "alloy", version = "0.9.2" }

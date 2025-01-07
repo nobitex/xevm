@@ -43,7 +43,7 @@ pub use swap::OpcodeSwap;
 use crate::{
     context::Context,
     error::ExecError,
-    machine::{CallInfo, Machine},
+    machine::{CallInfo, Machine, Word},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -52,23 +52,23 @@ pub enum ExecutionResult {
     Halted,
 }
 
-pub trait OpcodeHandler<C: Context> {
+pub trait OpcodeHandler<W: Word, C: Context<W>> {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError>;
 }
 
 #[derive(Debug)]
 pub struct OpcodeUnsupported(pub u8);
-impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnsupported {
     fn call(
         &self,
         _ctx: &mut C,
-        _machine: &mut Machine,
-        _call_info: &CallInfo,
+        _machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         Err(ExecError::Context(
             format!(
@@ -82,17 +82,19 @@ impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
 
 #[cfg(test)]
 mod tests {
+    use alloy_primitives::primitives::Address;
+
     use crate::{context::MiniEthereum, u256::U256};
 
     use super::*;
 
-    pub fn test<O: OpcodeHandler<MiniEthereum>>(
+    pub fn test<O: OpcodeHandler<U256, MiniEthereum>>(
         opcode_handler: O,
         testcases: &[(&[U256], Option<&[U256]>)],
     ) {
         for (inp, expected_out) in testcases {
             let mut ctx = MiniEthereum::new();
-            let mut machine = Machine::new(U256::zero(), vec![]);
+            let mut machine = Machine::new(Address::ZERO, vec![]);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

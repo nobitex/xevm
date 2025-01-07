@@ -1,18 +1,27 @@
+use alloy_primitives::primitives::Address;
+
 use crate::{
     context::{Account, Context, MiniEthereum},
-    machine::CallInfo,
+    machine::{CallInfo, Word},
     opcodes::ExecutionResult,
     u256::U256,
 };
+
+fn addr(v: u8) -> Address {
+    let mut arr = [0u8; 20];
+    arr[19] = v;
+    Address::from_slice(&arr)
+}
 
 mod erc20;
 #[test]
 fn test_erc20_deploy() {
     let mut ctx = MiniEthereum::default();
-    ctx.accounts.entry(123.into()).or_insert(Account {
-        nonce: 0.into(),
-        value: 5.into(),
+    ctx.accounts.entry(addr(123)).or_insert(Account {
+        nonce: U256::from(0),
+        value: U256::from(5),
         code: vec![],
+        storage: Default::default(),
     });
     let mut creation_code = erc20::PLAIN_ERC20_BYTECODE.to_vec();
     // ("Hello!", "HLO", 1000000 ether)
@@ -28,28 +37,28 @@ fn test_erc20_deploy() {
     ]);
     let contract_addr = ctx
         .create(CallInfo {
-            origin: 123.into(),
-            caller: 123.into(),
-            call_value: 0.into(),
+            origin: addr(123),
+            caller: addr(123),
+            call_value: U256::from(0),
             calldata: creation_code,
         })
         .unwrap();
     let total_supply_sig = [0x18, 0x16, 0x0d, 0xdd];
-    let call = move |ctx: &mut MiniEthereum, from: U256, inp: &[u8]| {
+    let call = move |ctx: &mut MiniEthereum, from: Address, inp: &[u8]| {
         ctx.call(
-            U256::zero(),
+            U256::ZERO,
             contract_addr,
             CallInfo {
                 origin: from,
                 caller: from,
-                call_value: U256::zero(),
+                call_value: U256::ZERO,
                 calldata: inp.to_vec(),
             },
         )
         .unwrap()
     };
     assert_eq!(
-        call(&mut ctx, 123.into(), &total_supply_sig),
+        call(&mut ctx, addr(123), &total_supply_sig),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -69,7 +78,7 @@ fn test_erc20_deploy() {
         ret
     }
     assert_eq!(
-        call(&mut ctx, 123.into(), &total_supply_sig),
+        call(&mut ctx, addr(123), &total_supply_sig),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -78,7 +87,7 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(&mut ctx, 123.into(), &balance_of_calldata(123.into())),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(123))),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -87,19 +96,19 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(&mut ctx, 123.into(), &balance_of_calldata(234.into())),
-        ExecutionResult::Returned(U256::zero().to_big_endian().to_vec())
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(234))),
+        ExecutionResult::Returned(U256::ZERO.to_big_endian().to_vec())
     );
     assert_eq!(
         call(
             &mut ctx,
-            123.into(),
-            &transfer_calldata(234.into(), 567.into())
+            addr(123),
+            &transfer_calldata(U256::from(234), U256::from(567))
         ),
-        ExecutionResult::Returned(U256::one().to_big_endian().to_vec())
+        ExecutionResult::Returned(U256::ONE.to_big_endian().to_vec())
     );
     assert_eq!(
-        call(&mut ctx, 123.into(), &balance_of_calldata(123.into())),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(123))),
         ExecutionResult::Returned(
             U256::from_str_radix("999999999999999999999433", 10)
                 .unwrap()
@@ -108,7 +117,7 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(&mut ctx, 123.into(), &balance_of_calldata(234.into())),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(234))),
         ExecutionResult::Returned(U256::from(567).to_big_endian().to_vec())
     );
 }
