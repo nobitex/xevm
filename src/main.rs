@@ -1,11 +1,10 @@
-use alloy_primitives::primitives::Address;
+use alloy_primitives::primitives::{Address, U256};
 use xevm::context::MiniEthereum;
 use xevm::machine::{CallInfo, Machine};
 use xevm::opcodes::ExecutionResult;
-use xevm::u256::U256;
 
 fn main() {
-    let code = vec![1, 2, 3];
+    let code = vec![];
     let mut ctx = MiniEthereum::new();
     let exec_result = Machine::new(Address::ZERO, code.clone())
         .run(

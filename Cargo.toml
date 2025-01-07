@@ -1,6 +1,6 @@
 [package]
 name = "xevm"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Tiny Ethereum virtual machine written in pure Rust"
 license = "MIT"
