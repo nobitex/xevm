@@ -39,7 +39,7 @@ pub trait Context<W: Word> {
     fn balance(&self, address: W::Addr) -> Result<W, Box<dyn Error>>;
     fn sload(&self, contract: W::Addr, address: W) -> Result<W, Box<dyn Error>>;
     fn sstore(&mut self, contract: W::Addr, address: W, value: W) -> Result<(), Box<dyn Error>>;
-    fn log(&self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
+    fn log(&mut self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -232,7 +232,7 @@ impl Context<U256> for MiniEthereum {
             .insert(address, value);
         Ok(())
     }
-    fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
+    fn log(&mut self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
         println!("New log! {:?} {:?}", topics, data);
         Ok(())
     }
