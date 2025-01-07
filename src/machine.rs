@@ -15,13 +15,14 @@ pub struct CallInfo<W: Word> {
     pub calldata: Vec<u8>,
 }
 
-pub trait Word:
-    Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + Ord + Hash + From<u64>
-{
+pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + Ord + Hash {
     const MAX: Self;
     const ZERO: Self;
     const ONE: Self;
     const BITS: usize;
+    fn hex(&self) -> String;
+    fn low_u64(&self) -> u64;
+    fn from_u64(val: u64) -> Self;
     fn bit(&self, bit: usize) -> bool;
     fn is_neg(&self) -> bool {
         self.bit(Self::BITS - 1)

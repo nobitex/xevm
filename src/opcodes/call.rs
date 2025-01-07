@@ -84,7 +84,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeReturnDataSize {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         if let Some(dat) = &machine.last_return {
-            machine.stack.push(W::from(dat.len() as u64));
+            machine.stack.push(W::from_u64(dat.len() as u64));
         } else {
             return Err(ExecError::Revert(RevertError::ReturnDataUnavailable));
         }

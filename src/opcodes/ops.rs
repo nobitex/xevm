@@ -69,7 +69,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnaryOp {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         machine.stack.push(match self {
-            Self::IsZero => W::from((a == W::ZERO) as u64),
+            Self::IsZero => W::from_u64((a == W::ZERO) as u64),
             Self::Not => a.not(),
         });
         machine.pc += 1;
@@ -138,30 +138,30 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
             Self::And => a.and(b),
             Self::Or => a.or(b),
             Self::Xor => a.xor(b),
-            Self::Lt => W::from((a < b) as u64),
-            Self::Gt => W::from((a > b) as u64),
-            Self::Slt => W::from(match (a.is_neg(), b.is_neg()) {
+            Self::Lt => W::from_u64((a < b) as u64),
+            Self::Gt => W::from_u64((a > b) as u64),
+            Self::Slt => W::from_u64(match (a.is_neg(), b.is_neg()) {
                 (false, false) => a.lt(b),
                 (false, true) => false,
                 (true, false) => true,
                 (true, true) => a.neg().gt(b.neg()),
             } as u64),
-            Self::Sgt => W::from(match (a.is_neg(), b.is_neg()) {
+            Self::Sgt => W::from_u64(match (a.is_neg(), b.is_neg()) {
                 (false, false) => a.gt(b),
                 (false, true) => true,
                 (true, false) => false,
                 (true, true) => a.neg().lt(b.neg()),
             } as u64),
-            Self::Eq => W::from((a == b) as u64),
+            Self::Eq => W::from_u64((a == b) as u64),
             Self::Byte => {
                 let i = a.to_usize()?;
                 let x = b.to_big_endian();
-                W::from(if i < 32 { x[i] as u64 } else { 0 })
+                W::from_u64(if i < 32 { x[i] as u64 } else { 0 })
             }
             Self::Sar => {
                 let mut result = b.shr(a);
                 if b.is_neg() {
-                    let addition = W::MAX.shl(W::from(256).sub(a));
+                    let addition = W::MAX.shl(W::from_u64(256).sub(a));
                     result = result.add(addition);
                 }
                 result
@@ -174,10 +174,10 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
                 let bytes = bytes_1 + 1;
                 let is_neg = b.bit(bytes_1 * 8 + 7);
                 let x = b
-                    .shl(W::from((256 - bytes * 8) as u64))
-                    .shr(W::from((256 - bytes * 8) as u64));
+                    .shl(W::from_u64((256 - bytes * 8) as u64))
+                    .shr(W::from_u64((256 - bytes * 8) as u64));
                 if is_neg {
-                    x.add(W::MAX.shl(W::from(((bytes_1 + 1) * 8) as u64)))
+                    x.add(W::MAX.shl(W::from_u64(((bytes_1 + 1) * 8) as u64)))
                 } else {
                     x
                 }
@@ -215,7 +215,7 @@ mod tests {
                     Some(&[-U256::from(1)]),
                 ),
                 (
-                    &[U256::from(128), U256::MAX >> U256::one()],
+                    &[U256::from(128), U256::MAX >> U256::ONE],
                     Some(&[U256::MAX >> U256::from(129)]),
                 ),
                 (&[U256::from(128), U256::MAX], Some(&[U256::MAX])),
@@ -230,17 +230,17 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
                 (
                     &[U256::MAX, U256::MAX - U256::from(123)],
-                    Some(&[U256::zero()]),
+                    Some(&[U256::ZERO]),
                 ),
-                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
                 (
                     &[U256::MAX - U256::from(123), U256::MAX],
-                    Some(&[U256::one()]),
+                    Some(&[U256::ONE]),
                 ),
             ],
         );
@@ -253,17 +253,17 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
                 (
                     &[U256::MAX, U256::MAX - U256::from(123)],
-                    Some(&[U256::one()]),
+                    Some(&[U256::ONE]),
                 ),
-                (&[U256::MAX, U256::MAX], Some(&[U256::zero()])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ZERO])),
                 (
                     &[U256::MAX - U256::from(123), U256::MAX],
-                    Some(&[U256::zero()]),
+                    Some(&[U256::ZERO]),
                 ),
             ],
         );
@@ -276,14 +276,14 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::one()])),
-                (&[-U256::from(123), U256::from(123)], Some(&[U256::one()])),
-                (&[U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
-                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
-                (&[-U256::from(123), -U256::from(234)], Some(&[U256::zero()])),
-                (&[-U256::from(234), -U256::from(123)], Some(&[U256::one()])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ONE])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::ONE])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ZERO])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ONE])),
             ],
         );
     }
@@ -295,14 +295,14 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(123), U256::from(120)], Some(&[U256::one()])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::from(123), U256::from(234)], Some(&[U256::zero()])),
-                (&[-U256::from(123), U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::from(123), -U256::from(123)], Some(&[U256::one()])),
-                (&[-U256::from(123), -U256::from(123)], Some(&[U256::zero()])),
-                (&[-U256::from(123), -U256::from(234)], Some(&[U256::one()])),
-                (&[-U256::from(234), -U256::from(123)], Some(&[U256::zero()])),
+                (&[U256::from(123), U256::from(120)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), U256::from(234)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::from(123), -U256::from(123)], Some(&[U256::ONE])),
+                (&[-U256::from(123), -U256::from(123)], Some(&[U256::ZERO])),
+                (&[-U256::from(123), -U256::from(234)], Some(&[U256::ONE])),
+                (&[-U256::from(234), -U256::from(123)], Some(&[U256::ZERO])),
             ],
         );
     }
@@ -314,11 +314,11 @@ mod tests {
             &[
                 (&[], None),
                 (&[U256::from(123)], None),
-                (&[U256::from(0), U256::from(0)], Some(&[U256::one()])),
-                (&[U256::from(123), U256::from(123)], Some(&[U256::one()])),
-                (&[U256::from(123), U256::from(122)], Some(&[U256::zero()])),
-                (&[U256::MAX, U256::MAX], Some(&[U256::one()])),
-                (&[U256::MAX, U256::MAX - U256::one()], Some(&[U256::zero()])),
+                (&[U256::from(0), U256::from(0)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(123)], Some(&[U256::ONE])),
+                (&[U256::from(123), U256::from(122)], Some(&[U256::ZERO])),
+                (&[U256::MAX, U256::MAX], Some(&[U256::ONE])),
+                (&[U256::MAX, U256::MAX - U256::ONE], Some(&[U256::ZERO])),
             ],
         );
     }
@@ -329,10 +329,10 @@ mod tests {
             OpcodeUnaryOp::IsZero,
             &[
                 (&[], None),
-                (&[U256::from(0)], Some(&[U256::one()])),
-                (&[U256::from(123)], Some(&[U256::zero()])),
-                (&[U256::MAX], Some(&[U256::zero()])),
-                (&[U256::MAX - U256::one()], Some(&[U256::zero()])),
+                (&[U256::from(0)], Some(&[U256::ONE])),
+                (&[U256::from(123)], Some(&[U256::ZERO])),
+                (&[U256::MAX], Some(&[U256::ZERO])),
+                (&[U256::MAX - U256::ONE], Some(&[U256::ZERO])),
             ],
         );
     }

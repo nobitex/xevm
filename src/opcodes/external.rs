@@ -125,7 +125,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCodeSize {
         machine: &mut Machine<W>,
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(W::from(machine.code.len() as u64));
+        machine.stack.push(W::from_u64(machine.code.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -160,7 +160,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataSize {
 
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(W::from(call_info.calldata.len() as u64));
+        machine
+            .stack
+            .push(W::from_u64(call_info.calldata.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -221,7 +223,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeSize {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let code = ctx.code(addr)?;
-        machine.stack.push(W::from(code.len() as u64));
+        machine.stack.push(W::from_u64(code.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
