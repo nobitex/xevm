@@ -19,9 +19,10 @@ pub use call::{OpcodeCall, OpcodeReturnDataCopy, OpcodeReturnDataSize};
 pub use create::{OpcodeCreate, OpcodeCreate2};
 pub use dup::OpcodeDup;
 pub use external::{
-    OpcodeAddress, OpcodeBalance, OpcodeBlockHash, OpcodeCallValue, OpcodeCalldataCopy,
-    OpcodeCalldataLoad, OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy, OpcodeCodeSize,
-    OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeOrigin, OpcodeSelfBalance,
+    OpcodeAddress, OpcodeBalance, OpcodeBlobHash, OpcodeBlockHash, OpcodeCallValue,
+    OpcodeCalldataCopy, OpcodeCalldataLoad, OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy,
+    OpcodeCodeSize, OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeOrigin,
+    OpcodeSelfBalance,
 };
 pub use halt::OpcodeHalt;
 pub use info::OpcodeInfo;
@@ -81,58 +82,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
-
-    use crate::{context::Info, u256::U256};
+    use crate::{context::MiniEthereum, u256::U256};
 
     use super::*;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct TestContext;
-    impl Context for TestContext {
-        fn code(&self, _address: U256) -> Result<Vec<u8>, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn block_hash(&self, _block_number: U256) -> Result<U256, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn info(&self, _inf: Info) -> Result<U256, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn create(&mut self, _call_info: CallInfo) -> Result<U256, ExecError> {
-            unimplemented!()
-        }
-        fn create2(&mut self, _call_info: CallInfo, _salt: U256) -> Result<U256, ExecError> {
-            unimplemented!()
-        }
-        fn call(
-            &mut self,
-            _gas: U256,
-            _address: U256,
-            _call_info: CallInfo,
-        ) -> Result<ExecutionResult, ExecError> {
-            unimplemented!()
-        }
-        fn balance(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn sload(&self, _address: U256) -> Result<U256, Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn sstore(&mut self, _address: U256, _value: U256) -> Result<(), Box<dyn Error>> {
-            unimplemented!()
-        }
-        fn log(&self, _topics: Vec<U256>, _data: Vec<u8>) -> Result<(), Box<dyn Error>> {
-            unimplemented!()
-        }
-    }
-
-    pub fn test<O: OpcodeHandler<TestContext>>(
+    pub fn test<O: OpcodeHandler<MiniEthereum>>(
         opcode_handler: O,
         testcases: &[(&[U256], Option<&[U256]>)],
     ) {
         for (inp, expected_out) in testcases {
-            let mut ctx = TestContext;
+            let mut ctx = MiniEthereum::new();
             let mut machine = Machine::new(U256::zero(), vec![]);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();

@@ -96,7 +96,7 @@ impl Machine {
         opcode_table.insert(0x46, Box::new(OpcodeInfo(Info::ChainId)));
         opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
         opcode_table.insert(0x48, Box::new(OpcodeInfo(Info::BaseFee)));
-        //opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
+        opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
         opcode_table.insert(0x4a, Box::new(OpcodeInfo(Info::BlobBaseFee)));
         opcode_table.insert(0x50, Box::new(OpcodePop));
         opcode_table.insert(0x51, Box::new(OpcodeMload));

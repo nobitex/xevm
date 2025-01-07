@@ -265,3 +265,19 @@ impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeHash {
         Ok(None)
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeBlobHash;
+impl<C: Context> OpcodeHandler<C> for OpcodeBlobHash {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let index = machine.pop_stack()?;
+        machine.stack.push(ctx.blob_hash(index)?);
+        machine.pc += 1;
+        Ok(None)
+    }
+}
