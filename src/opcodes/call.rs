@@ -49,7 +49,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
                     machine.stack.push(W::ONE);
                 }
                 ExecutionResult::Returned(ret) => {
-                    machine.mem_put(ret_offset, &ret[..ret_size]);
+                    machine.mem_put(ret_offset, &ret, 0, ret_size);
                     machine.last_return = Some(ret);
                     machine.stack.push(W::ONE);
                 }
@@ -60,7 +60,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
                 }
                 ExecError::Revert(e) => {
                     if let RevertError::Revert(ret) = e {
-                        machine.mem_put(ret_offset, &ret[..ret_size]);
+                        machine.mem_put(ret_offset, &ret, 0, ret_size);
                         machine.last_return = Some(ret);
                     } else {
                         machine.last_return = Some(vec![]);
@@ -106,7 +106,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeReturnDataCopy {
             let dest_addr = machine.pop_stack()?.to_usize()?;
             let addr = machine.pop_stack()?.to_usize()?;
             let size = machine.pop_stack()?.to_usize()?;
-            machine.mem_put(dest_addr, &dat[addr..addr + size]);
+            machine.mem_put(dest_addr, &dat, addr, size);
         } else {
             return Err(ExecError::Revert(RevertError::ReturnDataUnavailable));
         }

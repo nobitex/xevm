@@ -144,7 +144,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCodeCopy {
         let addr = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
         let code = machine.code[addr..addr + size].to_vec();
-        machine.mem_put(dest_addr, &code);
+        machine.mem_put(dest_addr, &code, 0, code.len());
         machine.pc += 1;
         Ok(None)
     }
@@ -181,7 +181,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataCopy {
         let dest_addr = machine.pop_stack()?.to_usize()?;
         let addr = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        machine.mem_put(dest_addr, &call_info.calldata[addr..addr + size]);
+        machine.mem_put(dest_addr, &call_info.calldata, addr, size);
         machine.pc += 1;
         Ok(None)
     }
@@ -243,7 +243,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeCopy {
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
         let code = ctx.code(addr.to_addr())?;
-        machine.mem_put(dest_offset, &code[offset..offset + size]);
+        machine.mem_put(dest_offset, &code, offset, size);
         machine.pc += 1;
         Ok(None)
     }

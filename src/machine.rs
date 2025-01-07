@@ -187,17 +187,30 @@ impl<W: Word> Machine<W> {
         Ok(ExecutionResult::Halted)
     }
 
-    pub fn mem_put(&mut self, offset: usize, data: &[u8]) {
-        let expected_len = offset + data.len();
+    pub fn mem_put(
+        &mut self,
+        target_offset: usize,
+        source: &[u8],
+        source_offset: usize,
+        len: usize,
+    ) {
+        if source_offset >= source.len() {
+            return;
+        }
+        let source_end = std::cmp::min(source_offset + len, source.len());
+        let src = &source[source_offset..source_end];
+        let expected_len = target_offset + src.len();
         if expected_len > self.memory.len() {
             self.memory.resize(expected_len, 0);
         }
-        self.memory[offset..offset + data.len()].copy_from_slice(data);
+        self.memory[target_offset..target_offset + src.len()].copy_from_slice(src);
     }
     pub fn mem_get(&mut self, offset: usize, size: usize) -> Vec<u8> {
         let mut ret = vec![0u8; size];
-        let sz = std::cmp::min(self.memory.len().saturating_sub(offset), size);
-        ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
+        if offset < self.memory.len() {
+            let sz = std::cmp::min(self.memory.len().saturating_sub(offset), size);
+            ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
+        }
         ret
     }
     pub fn pop_stack(&mut self) -> Result<W, ExecError> {
@@ -205,5 +218,52 @@ impl<W: Word> Machine<W> {
             .stack
             .pop()
             .ok_or(RevertError::NotEnoughValuesOnStack)?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloy_primitives::primitives::{Address, U256};
+
+    use crate::machine::Machine;
+
+    #[test]
+    fn test_mem_put() {
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![]);
+        assert_eq!(m.memory, vec![]);
+        m.mem_put(2, &[1, 2, 3], 1, 10);
+        assert_eq!(m.memory, vec![0, 0, 2, 3]);
+        m.mem_put(1, &[4, 5, 6], 5, 10);
+        assert_eq!(m.memory, vec![0, 0, 2, 3]);
+        m.mem_put(1, &[4, 5, 6], 1, 1);
+        assert_eq!(m.memory, vec![0, 5, 2, 3]);
+        m.mem_put(1, &[7, 8, 9], 1, 0);
+        assert_eq!(m.memory, vec![0, 5, 2, 3]);
+        m.mem_put(3, &[7, 8, 9], 2, 10);
+        assert_eq!(m.memory, vec![0, 5, 2, 9]);
+        m.mem_put(4, &[10, 11, 12, 13], 0, 2);
+        assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11]);
+        m.mem_put(4, &[10, 11, 12, 13], 0, 100);
+        assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11, 12, 13]);
+        m.mem_put(10, &[10, 11, 12, 13], 2, 100);
+        assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11, 12, 13, 0, 0, 12, 13]);
+    }
+
+    #[test]
+    fn test_mem_get() {
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![]);
+        m.memory = vec![0, 10, 20, 30, 40, 50];
+        assert_eq!(m.mem_get(1, 3), vec![10, 20, 30]);
+        assert_eq!(
+            m.mem_get(0, 100),
+            vec![
+                0, 10, 20, 30, 40, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        );
+        assert_eq!(m.mem_get(100, 2), vec![0, 0]);
+        assert_eq!(m.mem_get(5, 2), vec![50, 0]);
     }
 }
