@@ -190,6 +190,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
 
 #[cfg(test)]
 mod tests {
+    use crate::u256::U256;
+
     use super::super::tests::test;
     use super::*;
 
