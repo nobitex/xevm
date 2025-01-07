@@ -13,6 +13,7 @@ fn test_erc20_deploy() {
         nonce: 0.into(),
         value: 5.into(),
         code: vec![],
+        storage: Default::default(),
     });
     let mut creation_code = erc20::PLAIN_ERC20_BYTECODE.to_vec();
     // ("Hello!", "HLO", 1000000 ether)

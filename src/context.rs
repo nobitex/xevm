@@ -35,8 +35,8 @@ pub trait Context<W: Word> {
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
     fn balance(&self, address: W) -> Result<W, Box<dyn Error>>;
-    fn sload(&self, address: W) -> Result<W, Box<dyn Error>>;
-    fn sstore(&mut self, address: W, value: W) -> Result<(), Box<dyn Error>>;
+    fn sload(&self, contract: W, address: W) -> Result<W, Box<dyn Error>>;
+    fn sstore(&mut self, contract: W, address: W, value: W) -> Result<(), Box<dyn Error>>;
     fn log(&self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
@@ -45,6 +45,7 @@ pub struct Account {
     pub nonce: U256,
     pub value: U256,
     pub code: Vec<u8>,
+    pub storage: HashMap<U256, U256>,
 }
 
 #[derive(Clone, Default)]
@@ -52,7 +53,6 @@ pub struct MiniEthereum {
     precompiles:
         HashMap<U256, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
     pub accounts: HashMap<U256, Account>,
-    mem: HashMap<U256, U256>,
 }
 
 fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
@@ -82,7 +82,6 @@ impl MiniEthereum {
         Self {
             precompiles: [(U256::from(0), ecrecover)].into_iter().collect(),
             accounts: HashMap::new(),
-            mem: HashMap::new(),
         }
     }
 }
@@ -211,11 +210,19 @@ impl Context<U256> for MiniEthereum {
             .map(|a| a.value)
             .unwrap_or_default())
     }
-    fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>> {
-        Ok(self.mem.get(&address).copied().unwrap_or_default())
+    fn sload(&self, contract: U256, address: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(if let Some(acc) = self.accounts.get(&contract) {
+            acc.storage.get(&address).copied().unwrap_or_default()
+        } else {
+            Default::default()
+        })
     }
-    fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
-        self.mem.insert(address, value);
+    fn sstore(&mut self, contract: U256, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
+        self.accounts
+            .entry(contract)
+            .or_default()
+            .storage
+            .insert(address, value);
         Ok(())
     }
     fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
@@ -267,6 +274,7 @@ mod tests {
             nonce: 0.into(),
             value: 5.into(),
             code: vec![],
+            storage: Default::default(),
         });
         let contract_addr = ctx
             .create(CallInfo {
@@ -327,6 +335,7 @@ mod tests {
             nonce: 0.into(),
             value: 5.into(),
             code: vec![],
+            storage: Default::default(),
         });
         ctx.call(
             U256::zero(),
@@ -365,6 +374,7 @@ mod tests {
             nonce: 0.into(),
             value: 5.into(),
             code: vec![],
+            storage: Default::default(),
         });
         let contract_addr_1 = ctx
             .create(CallInfo {

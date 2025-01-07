@@ -18,7 +18,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSstore {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
-        ctx.sstore(addr, val)?;
+        ctx.sstore(machine.address, addr, val)?;
         machine.pc += 1;
         Ok(None)
     }
@@ -35,7 +35,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSload {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
-        machine.stack.push(ctx.sload(addr)?);
+        machine.stack.push(ctx.sload(machine.address, addr)?);
         machine.pc += 1;
         Ok(None)
     }
