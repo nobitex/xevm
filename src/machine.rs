@@ -130,7 +130,7 @@ impl Machine {
         opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
         opcode_table.insert(0xfa, Box::new(OpcodeCall::StaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
-        opcode_table.insert(0xff, Box::new(OpcodeUnsupported(0xff)));
+        opcode_table.insert(0xff, Box::new(OpcodeSelfDestruct));
 
         while self.pc < self.code.len() {
             let opcode = self.code[self.pc];

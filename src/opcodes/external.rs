@@ -281,3 +281,18 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBlobHash {
         Ok(None)
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeSelfDestruct;
+impl<C: Context> OpcodeHandler<C> for OpcodeSelfDestruct {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let target = machine.pop_stack()?;
+        ctx.destroy(machine.address, target);
+        Ok(Some(ExecutionResult::Halted))
+    }
+}

@@ -22,7 +22,7 @@ pub use external::{
     OpcodeAddress, OpcodeBalance, OpcodeBlobHash, OpcodeBlockHash, OpcodeCallValue,
     OpcodeCalldataCopy, OpcodeCalldataLoad, OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy,
     OpcodeCodeSize, OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeOrigin,
-    OpcodeSelfBalance,
+    OpcodeSelfBalance, OpcodeSelfDestruct,
 };
 pub use halt::OpcodeHalt;
 pub use info::OpcodeInfo;

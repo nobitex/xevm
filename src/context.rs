@@ -21,6 +21,7 @@ pub enum Info {
 }
 
 pub trait Context {
+    fn destroy(&self, _contract: U256, _target: U256) -> Result<(), ExecError>;
     fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>>;
     fn blob_hash(&self, index: U256) -> Result<U256, Box<dyn Error>>;
     fn block_hash(&self, block_number: U256) -> Result<U256, Box<dyn Error>>;
@@ -85,6 +86,9 @@ impl MiniEthereum {
 }
 
 impl Context for MiniEthereum {
+    fn destroy(&self, _contract: U256, _target: U256) -> Result<(), ExecError> {
+        Err(ExecError::Revert(RevertError::UnknownOpcode(0xff)))
+    }
     fn blob_hash(&self, _index: U256) -> Result<U256, Box<dyn Error>> {
         Ok(U256::zero())
     }
