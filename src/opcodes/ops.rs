@@ -93,10 +93,50 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
             Self::Add => a.overflowing_add(b).0,
             Self::Mul => a.overflowing_mul(b).0,
             Self::Sub => a.overflowing_sub(b).0,
-            Self::Div => a / b,
-            Self::Sdiv => a / b,
+            Self::Div => {
+                if b.is_zero() {
+                    U256::zero()
+                } else {
+                    a / b
+                }
+            }
+            Self::Sdiv => match (a.is_neg(), b.is_neg()) {
+                (false, false) => a / b,
+                (true, true) => -a / -b,
+                (false, true) => {
+                    -if a % -b == U256::zero() {
+                        a / -b
+                    } else {
+                        (a / -b) + 1
+                    }
+                }
+                (true, false) => {
+                    -if -a % b == U256::zero() {
+                        -a / b
+                    } else {
+                        (-a / b) + 1
+                    }
+                }
+            },
             Self::Mod => a % b,
-            Self::Smod => a % b,
+            Self::Smod => match (a.is_neg(), b.is_neg()) {
+                (false, false) => a % b,
+                (true, true) => -(-a % -b),
+                (false, true) => {
+                    if a % -b == U256::zero() {
+                        U256::zero()
+                    } else {
+                        -(-b - (a % -b))
+                    }
+                }
+                (true, false) => {
+                    if -a % b == U256::zero() {
+                        U256::zero()
+                    } else {
+                        b - (-a % b)
+                    }
+                }
+            },
             Self::Exp => a.pow(b),
             Self::Shl => b << a,
             Self::Shr => b >> a,
@@ -281,6 +321,52 @@ mod tests {
                 (&[U256::from(123)], Some(&[U256::zero()])),
                 (&[U256::MAX], Some(&[U256::zero()])),
                 (&[U256::MAX - U256::one()], Some(&[U256::zero()])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_sdiv() {
+        test(
+            OpcodeBinaryOp::Sdiv,
+            &[
+                (&[U256::from(11), U256::from(2)], Some(&[U256::from(5)])),
+                (&[-U256::from(11), -U256::from(2)], Some(&[U256::from(5)])),
+                (&[-U256::from(11), U256::from(2)], Some(&[-U256::from(6)])),
+                (&[U256::from(11), -U256::from(2)], Some(&[-U256::from(6)])),
+                (&[U256::from(10), U256::from(2)], Some(&[U256::from(5)])),
+                (&[-U256::from(10), -U256::from(2)], Some(&[U256::from(5)])),
+                (&[U256::from(10), -U256::from(2)], Some(&[-U256::from(5)])),
+                (&[-U256::from(10), U256::from(2)], Some(&[-U256::from(5)])),
+            ],
+        );
+    }
+    #[test]
+    fn test_opcode_smod() {
+        test(
+            OpcodeBinaryOp::Smod,
+            &[
+                (&[U256::from(11), U256::from(3)], Some(&[U256::from(2)])),
+                (&[-U256::from(11), -U256::from(3)], Some(&[-U256::from(2)])),
+                (&[-U256::from(11), U256::from(3)], Some(&[U256::from(1)])),
+                (&[U256::from(11), -U256::from(3)], Some(&[-U256::from(1)])),
+                (&[U256::from(10), U256::from(3)], Some(&[U256::from(1)])),
+                (&[-U256::from(10), -U256::from(3)], Some(&[-U256::from(1)])),
+                (&[-U256::from(10), U256::from(3)], Some(&[U256::from(2)])),
+                (&[U256::from(10), -U256::from(3)], Some(&[-U256::from(2)])),
+                (&[U256::from(123), U256::from(100)], Some(&[U256::from(23)])),
+                (
+                    &[-U256::from(123), -U256::from(100)],
+                    Some(&[-U256::from(23)]),
+                ),
+                (
+                    &[-U256::from(123), U256::from(100)],
+                    Some(&[U256::from(77)]),
+                ),
+                (
+                    &[U256::from(123), -U256::from(100)],
+                    Some(&[-U256::from(77)]),
+                ),
             ],
         );
     }
