@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use crate::error::ExecError;
-use crate::machine::CallInfo;
+use crate::machine::{CallInfo, Word};
 
 use super::OpcodeHandler;
 use crate::context::Context;
@@ -8,12 +8,12 @@ use crate::machine::Machine;
 
 #[derive(Debug)]
 pub struct OpcodeCreate;
-impl<C: Context> OpcodeHandler<C> for OpcodeCreate {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.to_usize()?;
@@ -33,12 +33,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCreate {
 
 #[derive(Debug)]
 pub struct OpcodeCreate2;
-impl<C: Context> OpcodeHandler<C> for OpcodeCreate2 {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate2 {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.to_usize()?;

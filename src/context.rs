@@ -1,7 +1,7 @@
 use crate::{
     error::{ExecError, RevertError},
     keccak::keccak,
-    machine::{CallInfo, Machine},
+    machine::{CallInfo, Machine, Word},
     opcodes::ExecutionResult,
     u256::U256,
 };
@@ -20,24 +20,24 @@ pub enum Info {
     BlobBaseFee,
 }
 
-pub trait Context {
-    fn destroy(&self, contract: U256, target: U256) -> Result<(), ExecError>;
-    fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>>;
-    fn blob_hash(&self, index: U256) -> Result<U256, Box<dyn Error>>;
-    fn block_hash(&self, block_number: U256) -> Result<U256, Box<dyn Error>>;
-    fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>>;
-    fn create(&mut self, call_info: CallInfo) -> Result<U256, ExecError>;
-    fn create2(&mut self, call_info: CallInfo, salt: U256) -> Result<U256, ExecError>;
+pub trait Context<W: Word> {
+    fn destroy(&self, contract: W, target: W) -> Result<(), ExecError>;
+    fn code(&self, address: W) -> Result<Vec<u8>, Box<dyn Error>>;
+    fn blob_hash(&self, index: W) -> Result<W, Box<dyn Error>>;
+    fn block_hash(&self, block_number: W) -> Result<W, Box<dyn Error>>;
+    fn info(&self, inf: Info) -> Result<W, Box<dyn Error>>;
+    fn create(&mut self, call_info: CallInfo<W>) -> Result<W, ExecError>;
+    fn create2(&mut self, call_info: CallInfo<W>, salt: W) -> Result<W, ExecError>;
     fn call(
         &mut self,
-        _gas: U256,
-        address: U256,
-        call_info: CallInfo,
+        _gas: W,
+        address: W,
+        call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
-    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>>;
-    fn sload(&self, address: U256) -> Result<U256, Box<dyn Error>>;
-    fn sstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>>;
-    fn log(&self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
+    fn balance(&self, address: W) -> Result<W, Box<dyn Error>>;
+    fn sload(&self, address: W) -> Result<W, Box<dyn Error>>;
+    fn sstore(&mut self, address: W, value: W) -> Result<(), Box<dyn Error>>;
+    fn log(&self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -49,7 +49,7 @@ pub struct Account {
 
 #[derive(Clone, Default)]
 pub struct MiniEthereum {
-    precompiles: HashMap<U256, &'static dyn Fn(CallInfo) -> Result<ExecutionResult, ExecError>>,
+    precompiles: HashMap<U256, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
     pub accounts: HashMap<U256, Account>,
     mem: HashMap<U256, U256>,
 }
@@ -70,13 +70,13 @@ fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
     rlp
 }
 
-fn ecrecover(_call_info: CallInfo) -> Result<ExecutionResult, ExecError> {
+fn ecrecover(_call_info: CallInfo<U256>) -> Result<ExecutionResult, ExecError> {
     Err(ExecError::Revert(RevertError::UnknownOpcode(0x0)))
 }
 
 impl MiniEthereum {
     pub fn new() -> Self {
-        let ecrecover: &'static dyn Fn(CallInfo) -> Result<ExecutionResult, ExecError> = &ecrecover;
+        let ecrecover: &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError> = &ecrecover;
         Self {
             precompiles: [(U256::from(0), ecrecover)].into_iter().collect(),
             accounts: HashMap::new(),
@@ -85,7 +85,7 @@ impl MiniEthereum {
     }
 }
 
-impl Context for MiniEthereum {
+impl Context<U256> for MiniEthereum {
     fn destroy(&self, _contract: U256, _target: U256) -> Result<(), ExecError> {
         Err(ExecError::Revert(RevertError::UnknownOpcode(0xff)))
     }
@@ -107,7 +107,7 @@ impl Context for MiniEthereum {
             _ => Ok(U256::zero()),
         }
     }
-    fn create(&mut self, call_info: CallInfo) -> Result<U256, ExecError> {
+    fn create(&mut self, call_info: CallInfo<U256>) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(call_info.caller).or_default();
         if acc.value >= call_info.call_value {
             acc.value = acc.value - call_info.call_value;
@@ -139,7 +139,7 @@ impl Context for MiniEthereum {
 
         Ok(contract_addr)
     }
-    fn create2(&mut self, call_info: CallInfo, salt: U256) -> Result<U256, ExecError> {
+    fn create2(&mut self, call_info: CallInfo<U256>, salt: U256) -> Result<U256, ExecError> {
         let acc = self.accounts.entry(call_info.caller).or_default();
         if acc.value >= call_info.call_value {
             acc.value = acc.value - call_info.call_value;
@@ -184,7 +184,7 @@ impl Context for MiniEthereum {
         &mut self,
         _gas: U256,
         address: U256,
-        call_info: CallInfo,
+        call_info: CallInfo<U256>,
     ) -> Result<ExecutionResult, ExecError> {
         if let Some(precompile) = self.precompiles.get(&address) {
             return precompile(call_info);

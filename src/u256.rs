@@ -1,6 +1,9 @@
 use std::ops::Neg;
 
-use crate::error::RevertError;
+use crate::{
+    error::{ExecError, RevertError},
+    machine::Word,
+};
 use uint::construct_uint;
 
 construct_uint! {
@@ -9,6 +12,29 @@ construct_uint! {
 
 construct_uint! {
     pub struct U512(8);
+}
+
+impl Word for U256 {
+    const MAX: Self = Self::max_value();
+    const ZERO: Self = Self::zero();
+    const ONE: Self = Self::one();
+    const BITS: usize = 256;
+    fn bit(&self, bit: usize) -> bool {
+        self.bit(bit)
+    }
+    fn from_big_endian(slice: &[u8]) -> Self {
+        Self::from_big_endian(slice)
+    }
+    fn to_big_endian(&self) -> Vec<u8> {
+        self.to_big_endian().to_vec()
+    }
+    fn to_usize(&self) -> Result<usize, crate::error::ExecError> {
+        if *self < Self::from(usize::MAX as u64) {
+            Ok(self.low_u64() as usize)
+        } else {
+            Err(ExecError::Revert(RevertError::OffsetSizeTooLarge))
+        }
+    }
 }
 
 impl U512 {

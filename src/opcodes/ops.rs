@@ -5,6 +5,7 @@ use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
+use crate::machine::Word;
 use crate::u256::U256;
 
 pub enum OpcodeBinaryOp {
@@ -41,12 +42,12 @@ pub enum OpcodeModularOp {
     MulMod,
 }
 
-impl<C: Context> OpcodeHandler<C> for OpcodeModularOp {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeModularOp {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?.as_u512();
         let b = machine.pop_stack()?.as_u512();
@@ -63,16 +64,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeModularOp {
     }
 }
 
-impl<C: Context> OpcodeHandler<C> for OpcodeUnaryOp {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnaryOp {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         machine.stack.push(match self {
-            Self::IsZero => U256::from((a == U256::zero()) as u64),
+            Self::IsZero => W::from((a == W::ZERO) as u64),
             Self::Not => !a,
         });
         machine.pc += 1;
@@ -80,22 +81,22 @@ impl<C: Context> OpcodeHandler<C> for OpcodeUnaryOp {
     }
 }
 
-impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         machine.stack.push(match self {
-            Self::Add => a.overflowing_add(b).0,
-            Self::Mul => a.overflowing_mul(b).0,
-            Self::Sub => a.overflowing_sub(b).0,
+            Self::Add => a + b,
+            Self::Mul => a * b,
+            Self::Sub => a - b,
             Self::Div => {
-                if b.is_zero() {
-                    U256::zero()
+                if b == W::ZERO {
+                    W::ZERO
                 } else {
                     a / b
                 }
@@ -104,17 +105,17 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
                 (false, false) => a / b,
                 (true, true) => -a / -b,
                 (false, true) => {
-                    -if a % -b == U256::zero() {
+                    -if a % -b == W::ZERO {
                         a / -b
                     } else {
-                        (a / -b) + 1
+                        (a / -b) + W::ONE
                     }
                 }
                 (true, false) => {
-                    -if -a % b == U256::zero() {
+                    -if -a % b == W::ZERO {
                         -a / b
                     } else {
-                        (-a / b) + 1
+                        (-a / b) + W::ONE
                     }
                 }
             },
@@ -123,15 +124,15 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
                 (false, false) => a % b,
                 (true, true) => -(-a % -b),
                 (false, true) => {
-                    if a % -b == U256::zero() {
-                        U256::zero()
+                    if a % -b == W::ZERO {
+                        W::ZERO
                     } else {
                         -(-b - (a % -b))
                     }
                 }
                 (true, false) => {
-                    if -a % b == U256::zero() {
-                        U256::zero()
+                    if -a % b == W::ZERO {
+                        W::ZERO
                     } else {
                         b - (-a % b)
                     }
@@ -161,13 +162,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
             Self::Byte => {
                 let i = a.to_usize()?;
                 let x = b.to_big_endian();
-                U256::from(if i < 32 { x[i] as u64 } else { 0 })
+                W::from(if i < 32 { x[i] as u64 } else { 0 })
             }
             Self::Sar => {
                 let mut result = b >> a;
                 if b.is_neg() {
-                    let addition = U256::MAX << (U256::from(256) - a);
-                    result += addition;
+                    let addition = W::MAX << (W::from(256) - a);
+                    result = result + addition;
                 }
                 result
             }
@@ -178,9 +179,9 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
                 }
                 let bytes = bytes_1 + 1;
                 let is_neg = b.bit(bytes_1 * 8 + 7);
-                let x = b << (256 - bytes * 8) >> (256 - bytes * 8);
+                let x = b << W::from((256 - bytes * 8) as u64) >> W::from((256 - bytes * 8) as u64);
                 if is_neg {
-                    x.overflowing_add(U256::MAX << ((bytes_1 + 1) * 8)).0
+                    x + (W::MAX << W::from(((bytes_1 + 1) * 8) as u64))
                 } else {
                     x
                 }

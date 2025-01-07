@@ -5,16 +5,16 @@ use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
+use crate::machine::Word;
 
 #[derive(Debug)]
 pub struct OpcodeSwap(pub u8);
-impl<C: Context> OpcodeHandler<C> for OpcodeSwap {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSwap {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let stack_len = machine.stack.len();

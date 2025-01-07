@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::hash::Hash;
+use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 
 use crate::context::{Context, Info};
 use crate::error::{ExecError, RevertError};
@@ -6,27 +8,64 @@ use crate::opcodes::*;
 use crate::u256::U256;
 
 #[derive(Debug, Clone, Default)]
-pub struct CallInfo {
-    pub origin: U256,
-    pub caller: U256,
-    pub call_value: U256,
+pub struct CallInfo<W: Word> {
+    pub origin: W,
+    pub caller: W,
+    pub call_value: W,
     pub calldata: Vec<u8>,
 }
 
+pub trait Word:
+    Clone
+    + Default
+    + Copy
+    + PartialEq
+    + Eq
+    + PartialOrd
+    + Ord
+    + Hash
+    + From<u64>
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Not<Output = Self>
+    + Neg<Output = Self>
+    + Not<Output = Self>
+    + BitAnd<Output = Self>
+    + BitOr<Output = Self>
+    + BitXor<Output = Self>
+    + Div<Output = Self>
+    + Rem<Output = Self>
+    + Shl<Self, Output = Self>
+    + Shr<Self, Output = Self>
+{
+    const MAX: Self;
+    const ZERO: Self;
+    const ONE: Self;
+    const BITS: usize;
+    fn bit(&self, bit: usize) -> bool;
+    fn is_neg(&self) -> bool {
+        self.bit(Self::BITS - 1)
+    }
+    fn to_usize(&self) -> Result<usize, ExecError>;
+    fn from_big_endian(slice: &[u8]) -> Self;
+    fn to_big_endian(&self) -> Vec<u8>;
+}
+
 #[derive(Debug, Clone, Default)]
-pub struct Machine {
-    pub address: U256,
+pub struct Machine<W: Word> {
+    pub address: W,
     pub code: Vec<u8>,
     pub pc: usize,
     pub gas_used: usize,
-    pub stack: Vec<U256>,
+    pub stack: Vec<W>,
     pub memory: Vec<u8>,
-    pub transient: HashMap<U256, U256>,
+    pub transient: HashMap<W, W>,
     pub last_return: Option<Vec<u8>>,
 }
 
-impl Machine {
-    pub fn new(address: U256, code: Vec<u8>) -> Self {
+impl<W: Word> Machine<W> {
+    pub fn new(address: W, code: Vec<u8>) -> Self {
         Self {
             address,
             code,
@@ -38,12 +77,12 @@ impl Machine {
             last_return: None,
         }
     }
-    pub fn run<C: Context>(
+    pub fn run<C: Context<W>>(
         mut self,
         ctx: &mut C,
-        call_info: &CallInfo,
+        call_info: &CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError> {
-        let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<C>>> = HashMap::new();
+        let mut opcode_table: HashMap<u8, Box<dyn OpcodeHandler<W, C>>> = HashMap::new();
         opcode_table.insert(0x00, Box::new(OpcodeHalt));
         opcode_table.insert(0x01, Box::new(OpcodeBinaryOp::Add));
         opcode_table.insert(0x02, Box::new(OpcodeBinaryOp::Mul));
@@ -158,7 +197,7 @@ impl Machine {
         ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
         ret
     }
-    pub fn pop_stack(&mut self) -> Result<U256, ExecError> {
+    pub fn pop_stack(&mut self) -> Result<W, ExecError> {
         Ok(self
             .stack
             .pop()

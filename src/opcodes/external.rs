@@ -5,16 +5,17 @@ use crate::error::ExecError;
 use crate::keccak::keccak;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
+use crate::machine::Word;
 use crate::u256::U256;
 
 #[derive(Debug)]
 pub struct OpcodeAddress;
-impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeAddress {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(machine.address);
         machine.pc += 1;
@@ -24,13 +25,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeAddress {
 
 #[derive(Debug)]
 pub struct OpcodeBalance;
-impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBalance {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        _call_info: &CallInfo,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         machine.stack.push(ctx.balance(addr)?);
@@ -41,13 +42,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBalance {
 
 #[derive(Debug)]
 pub struct OpcodeCallValue;
-impl<C: Context> OpcodeHandler<C> for OpcodeCallValue {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCallValue {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        call_info: &CallInfo,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.call_value);
         machine.pc += 1;
@@ -57,12 +58,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCallValue {
 
 #[derive(Debug)]
 pub struct OpcodeCaller;
-impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCaller {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.caller);
         machine.pc += 1;
@@ -72,12 +73,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
 
 #[derive(Debug)]
 pub struct OpcodeBlockHash;
-impl<C: Context> OpcodeHandler<C> for OpcodeBlockHash {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBlockHash {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let block_number = machine.pop_stack()?;
         machine.stack.push(ctx.block_hash(block_number)?);
@@ -88,12 +89,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBlockHash {
 
 #[derive(Debug)]
 pub struct OpcodeSelfBalance;
-impl<C: Context> OpcodeHandler<C> for OpcodeSelfBalance {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSelfBalance {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(ctx.balance(machine.address)?);
         machine.pc += 1;
@@ -103,12 +104,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSelfBalance {
 
 #[derive(Debug)]
 pub struct OpcodeOrigin;
-impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeOrigin {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.origin);
         machine.pc += 1;
@@ -118,14 +119,14 @@ impl<C: Context> OpcodeHandler<C> for OpcodeOrigin {
 
 #[derive(Debug)]
 pub struct OpcodeCodeSize;
-impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCodeSize {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(U256::from(machine.code.len() as u64));
+        machine.stack.push(W::from(machine.code.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -133,12 +134,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeSize {
 
 #[derive(Debug)]
 pub struct OpcodeCodeCopy;
-impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCodeCopy {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_addr = machine.pop_stack()?.to_usize()?;
         let addr = machine.pop_stack()?.to_usize()?;
@@ -152,17 +153,17 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCodeCopy {
 
 #[derive(Debug)]
 pub struct OpcodeCalldataSize;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldataSize {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataSize {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        call_info: &CallInfo,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine
             .stack
-            .push(U256::from(call_info.calldata.len() as u64));
+            .push(W::from(call_info.calldata.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -170,13 +171,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataSize {
 
 #[derive(Debug)]
 pub struct OpcodeCalldataCopy;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataCopy {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        call_info: &CallInfo,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_addr = machine.pop_stack()?.to_usize()?;
         let addr = machine.pop_stack()?.to_usize()?;
@@ -189,13 +190,13 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataCopy {
 
 #[derive(Debug)]
 pub struct OpcodeCalldataLoad;
-impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataLoad {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        call_info: &CallInfo,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.to_usize()?;
         let mut ret = [0u8; 32];
@@ -206,7 +207,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
                 .copied()
                 .unwrap_or_default();
         }
-        machine.stack.push(U256::from_big_endian(&ret));
+        machine.stack.push(W::from_big_endian(&ret));
         machine.pc += 1;
         Ok(None)
     }
@@ -214,16 +215,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
 
 #[derive(Debug)]
 pub struct OpcodeExtCodeSize;
-impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeSize {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeSize {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let code = ctx.code(addr)?;
-        machine.stack.push(U256::from(code.len() as u64));
+        machine.stack.push(W::from(code.len() as u64));
         machine.pc += 1;
         Ok(None)
     }
@@ -231,12 +232,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeSize {
 
 #[derive(Debug)]
 pub struct OpcodeExtCodeCopy;
-impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeCopy {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeCopy {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let dest_offset = machine.pop_stack()?.to_usize()?;
@@ -251,16 +252,16 @@ impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeCopy {
 
 #[derive(Debug)]
 pub struct OpcodeExtCodeHash;
-impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeHash {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeHash {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let code_hash = keccak(&ctx.code(addr)?);
-        machine.stack.push(U256::from_big_endian(&code_hash));
+        machine.stack.push(W::from_big_endian(&code_hash));
         machine.pc += 1;
         Ok(None)
     }
@@ -268,12 +269,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeHash {
 
 #[derive(Debug)]
 pub struct OpcodeBlobHash;
-impl<C: Context> OpcodeHandler<C> for OpcodeBlobHash {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBlobHash {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let index = machine.pop_stack()?;
         machine.stack.push(ctx.blob_hash(index)?);
@@ -284,12 +285,12 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBlobHash {
 
 #[derive(Debug)]
 pub struct OpcodeSelfDestruct;
-impl<C: Context> OpcodeHandler<C> for OpcodeSelfDestruct {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSelfDestruct {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?;
         ctx.destroy(machine.address, target)?;

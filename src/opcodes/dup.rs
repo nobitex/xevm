@@ -5,16 +5,17 @@ use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
+use crate::machine::Word;
 
 #[derive(Debug)]
 pub struct OpcodeDup(pub u8);
-impl<C: Context> OpcodeHandler<C> for OpcodeDup {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeDup {
     fn call(
         &self,
         _ctx: &mut C,
-        machine: &mut Machine,
+        machine: &mut Machine<W>,
 
-        _call_info: &CallInfo,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         if self.0 as usize >= machine.stack.len() {
             return Err(ExecError::Revert(RevertError::NotEnoughValuesOnStack));

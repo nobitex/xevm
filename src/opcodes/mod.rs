@@ -43,7 +43,7 @@ pub use swap::OpcodeSwap;
 use crate::{
     context::Context,
     error::ExecError,
-    machine::{CallInfo, Machine},
+    machine::{CallInfo, Machine, Word},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -52,23 +52,23 @@ pub enum ExecutionResult {
     Halted,
 }
 
-pub trait OpcodeHandler<C: Context> {
+pub trait OpcodeHandler<W: Word, C: Context<W>> {
     fn call(
         &self,
         ctx: &mut C,
-        machine: &mut Machine,
-        _call_info: &CallInfo,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError>;
 }
 
 #[derive(Debug)]
 pub struct OpcodeUnsupported(pub u8);
-impl<C: Context> OpcodeHandler<C> for OpcodeUnsupported {
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnsupported {
     fn call(
         &self,
         _ctx: &mut C,
-        _machine: &mut Machine,
-        _call_info: &CallInfo,
+        _machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         Err(ExecError::Context(
             format!(
@@ -86,7 +86,7 @@ mod tests {
 
     use super::*;
 
-    pub fn test<O: OpcodeHandler<MiniEthereum>>(
+    pub fn test<O: OpcodeHandler<U256, MiniEthereum>>(
         opcode_handler: O,
         testcases: &[(&[U256], Option<&[U256]>)],
     ) {
