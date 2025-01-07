@@ -32,7 +32,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         let args_size = machine.pop_stack()?.to_usize()?;
         let ret_offset = machine.pop_stack()?.to_usize()?;
         let ret_size = machine.pop_stack()?.to_usize()?;
-        let args = machine.memory[args_offset..args_offset + args_size].to_vec();
+        let args = machine.mem_get(args_offset, args_size);
 
         new_call_info.calldata = args;
         match self {

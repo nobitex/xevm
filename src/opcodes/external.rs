@@ -143,8 +143,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCodeCopy {
         let dest_addr = machine.pop_stack()?.to_usize()?;
         let addr = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        let code = machine.code[addr..addr + size].to_vec();
-        machine.mem_put(dest_addr, &code, 0, code.len());
+        let code = machine.code.clone();
+        machine.mem_put(dest_addr, &code, addr, size);
         machine.pc += 1;
         Ok(None)
     }
