@@ -3,9 +3,17 @@ use crate::{
     machine::Word,
 };
 
+use alloy_primitives::primitives::Address;
 pub use alloy_primitives::primitives::U256;
 
 impl Word for U256 {
+    type Addr = Address;
+    fn from_addr(addr: Self::Addr) -> Self {
+        Self::from_big_endian(addr.as_slice())
+    }
+    fn to_addr(self) -> Self::Addr {
+        Address::from_slice(&self.to_big_endian()[12..])
+    }
     const BITS: usize = 256;
     const MAX: Self = U256::MAX;
     const ONE: Self = U256::from_limbs([1, 0, 0, 0]);

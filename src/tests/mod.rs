@@ -1,3 +1,5 @@
+use alloy_primitives::primitives::Address;
+
 use crate::{
     context::{Account, Context, MiniEthereum},
     machine::{CallInfo, Word},
@@ -5,11 +7,17 @@ use crate::{
     u256::U256,
 };
 
+fn addr(v: u8) -> Address {
+    let mut arr = [0u8; 20];
+    arr[19] = v;
+    Address::from_slice(&arr)
+}
+
 mod erc20;
 #[test]
 fn test_erc20_deploy() {
     let mut ctx = MiniEthereum::default();
-    ctx.accounts.entry(U256::from(123)).or_insert(Account {
+    ctx.accounts.entry(addr(123)).or_insert(Account {
         nonce: U256::from(0),
         value: U256::from(5),
         code: vec![],
@@ -29,14 +37,14 @@ fn test_erc20_deploy() {
     ]);
     let contract_addr = ctx
         .create(CallInfo {
-            origin: U256::from(123),
-            caller: U256::from(123),
+            origin: addr(123),
+            caller: addr(123),
             call_value: U256::from(0),
             calldata: creation_code,
         })
         .unwrap();
     let total_supply_sig = [0x18, 0x16, 0x0d, 0xdd];
-    let call = move |ctx: &mut MiniEthereum, from: U256, inp: &[u8]| {
+    let call = move |ctx: &mut MiniEthereum, from: Address, inp: &[u8]| {
         ctx.call(
             U256::ZERO,
             contract_addr,
@@ -50,7 +58,7 @@ fn test_erc20_deploy() {
         .unwrap()
     };
     assert_eq!(
-        call(&mut ctx, U256::from(123), &total_supply_sig),
+        call(&mut ctx, addr(123), &total_supply_sig),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -70,7 +78,7 @@ fn test_erc20_deploy() {
         ret
     }
     assert_eq!(
-        call(&mut ctx, U256::from(123), &total_supply_sig),
+        call(&mut ctx, addr(123), &total_supply_sig),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -79,11 +87,7 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(
-            &mut ctx,
-            U256::from(123),
-            &balance_of_calldata(U256::from(123))
-        ),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(123))),
         ExecutionResult::Returned(
             U256::from_str_radix("1000000000000000000000000", 10)
                 .unwrap()
@@ -92,27 +96,19 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(
-            &mut ctx,
-            U256::from(123),
-            &balance_of_calldata(U256::from(234))
-        ),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(234))),
         ExecutionResult::Returned(U256::ZERO.to_big_endian().to_vec())
     );
     assert_eq!(
         call(
             &mut ctx,
-            U256::from(123),
+            addr(123),
             &transfer_calldata(U256::from(234), U256::from(567))
         ),
         ExecutionResult::Returned(U256::ONE.to_big_endian().to_vec())
     );
     assert_eq!(
-        call(
-            &mut ctx,
-            U256::from(123),
-            &balance_of_calldata(U256::from(123))
-        ),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(123))),
         ExecutionResult::Returned(
             U256::from_str_radix("999999999999999999999433", 10)
                 .unwrap()
@@ -121,11 +117,7 @@ fn test_erc20_deploy() {
         )
     );
     assert_eq!(
-        call(
-            &mut ctx,
-            U256::from(123),
-            &balance_of_calldata(U256::from(234))
-        ),
+        call(&mut ctx, addr(123), &balance_of_calldata(U256::from(234))),
         ExecutionResult::Returned(U256::from(567).to_big_endian().to_vec())
     );
 }

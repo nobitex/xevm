@@ -1,3 +1,5 @@
+use alloy_primitives::primitives::Address;
+
 use crate::{
     error::{ExecError, RevertError},
     keccak::keccak,
@@ -21,22 +23,22 @@ pub enum Info {
 }
 
 pub trait Context<W: Word> {
-    fn destroy(&self, contract: W, target: W) -> Result<(), ExecError>;
-    fn code(&self, address: W) -> Result<Vec<u8>, Box<dyn Error>>;
+    fn destroy(&self, contract: W::Addr, target: W::Addr) -> Result<(), ExecError>;
+    fn code(&self, address: W::Addr) -> Result<Vec<u8>, Box<dyn Error>>;
     fn blob_hash(&self, index: W) -> Result<W, Box<dyn Error>>;
     fn block_hash(&self, block_number: W) -> Result<W, Box<dyn Error>>;
     fn info(&self, inf: Info) -> Result<W, Box<dyn Error>>;
-    fn create(&mut self, call_info: CallInfo<W>) -> Result<W, ExecError>;
-    fn create2(&mut self, call_info: CallInfo<W>, salt: W) -> Result<W, ExecError>;
+    fn create(&mut self, call_info: CallInfo<W>) -> Result<W::Addr, ExecError>;
+    fn create2(&mut self, call_info: CallInfo<W>, salt: W) -> Result<W::Addr, ExecError>;
     fn call(
         &mut self,
         _gas: W,
-        address: W,
+        address: W::Addr,
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
-    fn balance(&self, address: W) -> Result<W, Box<dyn Error>>;
-    fn sload(&self, contract: W, address: W) -> Result<W, Box<dyn Error>>;
-    fn sstore(&mut self, contract: W, address: W, value: W) -> Result<(), Box<dyn Error>>;
+    fn balance(&self, address: W::Addr) -> Result<W, Box<dyn Error>>;
+    fn sload(&self, contract: W::Addr, address: W) -> Result<W, Box<dyn Error>>;
+    fn sstore(&mut self, contract: W::Addr, address: W, value: W) -> Result<(), Box<dyn Error>>;
     fn log(&self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
 
@@ -51,13 +53,13 @@ pub struct Account {
 #[derive(Clone, Default)]
 pub struct MiniEthereum {
     precompiles:
-        HashMap<U256, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
-    pub accounts: HashMap<U256, Account>,
+        HashMap<Address, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
+    pub accounts: HashMap<Address, Account>,
 }
 
-fn rlp_address_nonce(addr: U256, nonce: U256) -> Vec<u8> {
+fn rlp_address_nonce(addr: Address, nonce: U256) -> Vec<u8> {
     let mut rlp = vec![0x94u8];
-    rlp.extend(&addr.to_big_endian()[12..32]);
+    rlp.extend(addr.as_slice());
     if nonce < U256::from(128) {
         rlp.extend(&[nonce.low_u64() as u8]);
     } else {
@@ -80,20 +82,20 @@ impl MiniEthereum {
         let ecrecover: &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError> =
             &ecrecover;
         Self {
-            precompiles: [(U256::from(0), ecrecover)].into_iter().collect(),
+            precompiles: [(Address::ZERO, ecrecover)].into_iter().collect(),
             accounts: HashMap::new(),
         }
     }
 }
 
 impl Context<U256> for MiniEthereum {
-    fn destroy(&self, _contract: U256, _target: U256) -> Result<(), ExecError> {
+    fn destroy(&self, _contract: Address, _target: Address) -> Result<(), ExecError> {
         Err(ExecError::Revert(RevertError::UnknownOpcode(0xff)))
     }
     fn blob_hash(&self, _index: U256) -> Result<U256, Box<dyn Error>> {
         Ok(U256::ZERO)
     }
-    fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>> {
+    fn code(&self, address: Address) -> Result<Vec<u8>, Box<dyn Error>> {
         Ok(self
             .accounts
             .get(&address)
@@ -108,7 +110,7 @@ impl Context<U256> for MiniEthereum {
             _ => Ok(U256::ZERO),
         }
     }
-    fn create(&mut self, call_info: CallInfo<U256>) -> Result<U256, ExecError> {
+    fn create(&mut self, call_info: CallInfo<U256>) -> Result<Address, ExecError> {
         let acc = self.accounts.entry(call_info.caller).or_default();
         if acc.value >= call_info.call_value {
             acc.value = acc.value - call_info.call_value;
@@ -117,7 +119,7 @@ impl Context<U256> for MiniEthereum {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
         let contract_addr =
-            U256::from_big_endian(&keccak(&rlp_address_nonce(call_info.caller, acc.nonce))[12..32]);
+            Address::from_slice(&keccak(&rlp_address_nonce(call_info.caller, acc.nonce))[12..32]);
         self.accounts.entry(contract_addr).or_default();
         self.accounts.get_mut(&contract_addr).unwrap().value = call_info.call_value;
 
@@ -140,7 +142,7 @@ impl Context<U256> for MiniEthereum {
 
         Ok(contract_addr)
     }
-    fn create2(&mut self, call_info: CallInfo<U256>, salt: U256) -> Result<U256, ExecError> {
+    fn create2(&mut self, call_info: CallInfo<U256>, salt: U256) -> Result<Address, ExecError> {
         let acc = self.accounts.entry(call_info.caller).or_default();
         if acc.value >= call_info.call_value {
             acc.value = acc.value - call_info.call_value;
@@ -149,10 +151,10 @@ impl Context<U256> for MiniEthereum {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
         let mut inp = vec![0xffu8];
-        inp.extend(&call_info.caller.to_big_endian()[12..32]);
+        inp.extend(call_info.caller.as_slice());
         inp.extend(&salt.to_big_endian());
         inp.extend(&keccak(&call_info.calldata));
-        let contract_addr = U256::from_big_endian(&keccak(&inp)[12..32]);
+        let contract_addr = Address::from_slice(&keccak(&inp)[12..32]);
         if self
             .accounts
             .get(&contract_addr)
@@ -169,7 +171,7 @@ impl Context<U256> for MiniEthereum {
             &CallInfo {
                 call_value: call_info.call_value,
                 calldata: vec![],
-                origin: U256::ZERO,
+                origin: Address::ZERO,
                 caller: call_info.caller,
             },
         )?;
@@ -184,7 +186,7 @@ impl Context<U256> for MiniEthereum {
     fn call(
         &mut self,
         _gas: U256,
-        address: U256,
+        address: Address,
         call_info: CallInfo<U256>,
     ) -> Result<ExecutionResult, ExecError> {
         if let Some(precompile) = self.precompiles.get(&address) {
@@ -203,21 +205,26 @@ impl Context<U256> for MiniEthereum {
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
     }
-    fn balance(&self, address: U256) -> Result<U256, Box<dyn Error>> {
+    fn balance(&self, address: Address) -> Result<U256, Box<dyn Error>> {
         Ok(self
             .accounts
             .get(&address)
             .map(|a| a.value)
             .unwrap_or_default())
     }
-    fn sload(&self, contract: U256, address: U256) -> Result<U256, Box<dyn Error>> {
+    fn sload(&self, contract: Address, address: U256) -> Result<U256, Box<dyn Error>> {
         Ok(if let Some(acc) = self.accounts.get(&contract) {
             acc.storage.get(&address).copied().unwrap_or_default()
         } else {
             Default::default()
         })
     }
-    fn sstore(&mut self, contract: U256, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
+    fn sstore(
+        &mut self,
+        contract: Address,
+        address: U256,
+        value: U256,
+    ) -> Result<(), Box<dyn Error>> {
         self.accounts
             .entry(contract)
             .or_default()
@@ -234,6 +241,12 @@ impl Context<U256> for MiniEthereum {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn addr(v: u8) -> Address {
+        let mut arr = [0u8; 20];
+        arr[19] = v;
+        Address::from_slice(&arr)
+    }
 
     /*
        pragma solidity ^0.8.13;
@@ -270,7 +283,7 @@ mod tests {
     #[test]
     fn test_counter_contract() {
         let mut ctx = MiniEthereum::default();
-        ctx.accounts.entry(U256::from_u64(123)).or_insert(Account {
+        ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
             value: U256::from_u64(5),
             code: vec![],
@@ -278,8 +291,8 @@ mod tests {
         });
         let contract_addr = ctx
             .create(CallInfo {
-                origin: U256::from_u64(123),
-                caller: U256::from_u64(123),
+                origin: addr(123),
+                caller: addr(123),
                 call_value: U256::from_u64(2),
                 calldata: COUNTER_CODE.to_vec(),
             })
@@ -292,8 +305,8 @@ mod tests {
                 U256::ZERO,
                 contract_addr,
                 CallInfo {
-                    origin: U256::ZERO,
-                    caller: U256::ZERO,
+                    origin: Address::ZERO,
+                    caller: Address::ZERO,
                     call_value: U256::ZERO,
                     calldata: inp.to_vec(),
                 },
@@ -320,8 +333,8 @@ mod tests {
     fn test_context() {
         let mut ctx = MiniEthereum::default();
         ctx.create(CallInfo {
-            origin: U256::from_u64(123),
-            caller: U256::from_u64(123),
+            origin: addr(123),
+            caller: addr(123),
             call_value: U256::from_u64(0),
             calldata: COUNTER_CODE.to_vec(),
         })
@@ -331,7 +344,7 @@ mod tests {
     #[test]
     fn test_call() {
         let mut ctx = MiniEthereum::default();
-        ctx.accounts.entry(U256::from_u64(123)).or_insert(Account {
+        ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
             value: U256::from_u64(5),
             code: vec![],
@@ -339,32 +352,26 @@ mod tests {
         });
         ctx.call(
             U256::ZERO,
-            U256::from_u64(234),
+            addr(234),
             CallInfo {
-                origin: U256::ZERO,
-                caller: U256::from_u64(123),
+                origin: Address::ZERO,
+                caller: addr(123),
                 call_value: U256::from_u64(2),
                 calldata: vec![],
             },
         )
         .unwrap();
-        assert_eq!(
-            ctx.accounts.get(&U256::from_u64(123)).unwrap().nonce,
-            U256::from(1)
-        );
-        assert_eq!(ctx.balance(U256::from_u64(123)).unwrap(), U256::from(3));
-        assert_eq!(
-            ctx.accounts.get(&U256::from_u64(234)).unwrap().nonce,
-            U256::from(0)
-        );
-        assert_eq!(ctx.balance(U256::from_u64(234)).unwrap(), U256::from(2));
+        assert_eq!(ctx.accounts.get(&addr(123)).unwrap().nonce, U256::from(1));
+        assert_eq!(ctx.balance(addr(123)).unwrap(), U256::from(3));
+        assert_eq!(ctx.accounts.get(&addr(234)).unwrap().nonce, U256::from(0));
+        assert_eq!(ctx.balance(addr(234)).unwrap(), U256::from(2));
         assert_eq!(
             ctx.call(
                 U256::ZERO,
-                U256::from_u64(234),
+                addr(234),
                 CallInfo {
-                    origin: U256::ZERO,
-                    caller: U256::from_u64(123),
+                    origin: Address::ZERO,
+                    caller: addr(123),
                     call_value: U256::from_u64(4),
                     calldata: vec![],
                 },
@@ -376,7 +383,7 @@ mod tests {
     #[test]
     fn test_create() {
         let mut ctx = MiniEthereum::default();
-        ctx.accounts.entry(U256::from_u64(123)).or_insert(Account {
+        ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
             value: U256::from_u64(5),
             code: vec![],
@@ -384,38 +391,32 @@ mod tests {
         });
         let contract_addr_1 = ctx
             .create(CallInfo {
-                origin: U256::from_u64(123),
-                caller: U256::from_u64(123),
+                origin: addr(123),
+                caller: addr(123),
                 call_value: U256::from_u64(2),
                 calldata: COUNTER_CODE.to_vec(),
             })
             .unwrap();
-        assert_eq!(
-            ctx.accounts.get(&U256::from_u64(123)).unwrap().nonce,
-            U256::from(1)
-        );
+        assert_eq!(ctx.accounts.get(&addr(123)).unwrap().nonce, U256::from(1));
         let contract_addr_2 = ctx
             .create(CallInfo {
-                origin: U256::from_u64(123),
-                caller: U256::from_u64(123),
+                origin: addr(123),
+                caller: addr(123),
                 call_value: U256::from_u64(2),
                 calldata: COUNTER_CODE.to_vec(),
             })
             .unwrap();
-        assert_eq!(
-            ctx.accounts.get(&U256::from_u64(123)).unwrap().nonce,
-            U256::from(2)
-        );
-        assert_eq!(ctx.balance(U256::from_u64(123)).unwrap(), U256::from(1));
+        assert_eq!(ctx.accounts.get(&addr(123)).unwrap().nonce, U256::from(2));
+        assert_eq!(ctx.balance(addr(123)).unwrap(), U256::from(1));
         assert_eq!(ctx.balance(contract_addr_1).unwrap(), U256::from(2));
         assert_eq!(ctx.balance(contract_addr_2).unwrap(), U256::from(2));
         assert_eq!(
-            contract_addr_1.hex(),
-            "0x000000000000000000000000838fea66b9b3aae5120d989b4ab767396f2fcbf1".to_string()
+            contract_addr_1.to_string(),
+            "0x838FeA66B9b3aAe5120D989B4Ab767396f2fcBf1".to_string()
         );
         assert_eq!(
-            contract_addr_2.hex(),
-            "0x000000000000000000000000ae7fac60782bb47c1e93a68b344aa5aff8a644ba".to_string()
+            contract_addr_2.to_string(),
+            "0xae7FaC60782BB47C1E93A68b344Aa5AFF8A644bA".to_string()
         );
     }
     #[test]
@@ -423,8 +424,8 @@ mod tests {
         let mut ctx = MiniEthereum::default();
         let res1 = ctx.create2(
             CallInfo {
-                origin: U256::from_u64(123),
-                caller: U256::from_u64(123),
+                origin: addr(123),
+                caller: addr(123),
                 call_value: U256::from_u64(0),
                 calldata: COUNTER_CODE.to_vec(),
             },
@@ -432,8 +433,8 @@ mod tests {
         );
         let res2 = ctx.create2(
             CallInfo {
-                origin: U256::from_u64(123),
-                caller: U256::from_u64(123),
+                origin: addr(123),
+                caller: addr(123),
                 call_value: U256::from_u64(0),
                 calldata: COUNTER_CODE.to_vec(),
             },
@@ -442,18 +443,18 @@ mod tests {
         assert!(res1.is_ok());
         assert!(res2.is_ok());
         assert_eq!(
-            res1.unwrap().hex(),
-            "0x000000000000000000000000776fb1205e347d8388f4a39c9a2ca47d5afe0f41"
+            res1.unwrap().to_string(),
+            "0x776fb1205e347D8388F4A39C9a2CA47d5AfE0f41"
         );
         assert_eq!(
-            res2.unwrap().hex(),
-            "0x000000000000000000000000554d4b57431778ac563b4f053bfd472a538edbe2"
+            res2.unwrap().to_string(),
+            "0x554d4b57431778ac563B4f053bFd472a538edBe2"
         );
         assert_eq!(
             ctx.create2(
                 CallInfo {
-                    origin: U256::from_u64(123),
-                    caller: U256::from_u64(123),
+                    origin: addr(123),
+                    caller: addr(123),
                     call_value: U256::from_u64(0),
                     calldata: COUNTER_CODE.to_vec(),
                 },

@@ -24,7 +24,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         let mut new_call_info = call_info.clone();
 
         let gas = machine.pop_stack()?;
-        let address = machine.pop_stack()?;
+        let address = machine.pop_stack()?.to_addr();
         if self == &OpcodeCall::Call {
             new_call_info.call_value = machine.pop_stack()?;
         }

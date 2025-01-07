@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::ops::{Add, Not};
 
 use crate::context::{Context, Info};
 use crate::error::{ExecError, RevertError};
@@ -9,17 +8,20 @@ use crate::opcodes::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct CallInfo<W: Word> {
-    pub origin: W,
-    pub caller: W,
+    pub origin: W::Addr,
+    pub caller: W::Addr,
     pub call_value: W,
     pub calldata: Vec<u8>,
 }
 
 pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + Ord + Hash {
+    type Addr: Clone + Debug + Default + Copy;
     const MAX: Self;
     const ZERO: Self;
     const ONE: Self;
     const BITS: usize;
+    fn from_addr(addr: Self::Addr) -> Self;
+    fn to_addr(self) -> Self::Addr;
     fn hex(&self) -> String;
     fn low_u64(&self) -> u64;
     fn from_u64(val: u64) -> Self;
@@ -55,7 +57,7 @@ pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + O
 
 #[derive(Debug, Clone, Default)]
 pub struct Machine<W: Word> {
-    pub address: W,
+    pub address: W::Addr,
     pub code: Vec<u8>,
     pub pc: usize,
     pub gas_used: usize,
@@ -66,7 +68,7 @@ pub struct Machine<W: Word> {
 }
 
 impl<W: Word> Machine<W> {
-    pub fn new(address: W, code: Vec<u8>) -> Self {
+    pub fn new(address: W::Addr, code: Vec<u8>) -> Self {
         Self {
             address,
             code,

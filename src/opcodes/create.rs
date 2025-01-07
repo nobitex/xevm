@@ -25,7 +25,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
             call_value: value,
             calldata: code,
         })?;
-        machine.stack.push(addr);
+        machine.stack.push(W::from_addr(addr));
         machine.pc += 1;
         Ok(None)
     }
@@ -54,7 +54,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate2 {
             },
             salt,
         )?;
-        machine.stack.push(addr);
+        machine.stack.push(W::from_addr(addr));
         machine.pc += 1;
         Ok(None)
     }
