@@ -27,6 +27,8 @@ pub enum RevertError {
     Revert(Vec<u8>),
     InsufficientBalance,
     ContractAlreadyDeployed,
+    BlockHashUnavailable,
+    ReturnDataUnavailable,
 }
 
 impl From<Box<dyn Error>> for ExecError {

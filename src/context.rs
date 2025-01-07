@@ -21,6 +21,8 @@ pub enum Info {
 }
 
 pub trait Context {
+    fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>>;
+    fn block_hash(&self, block_number: U256) -> Result<U256, Box<dyn Error>>;
     fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>>;
     fn create(&mut self, call_info: CallInfo) -> Result<U256, ExecError>;
     fn create2(&mut self, call_info: CallInfo, salt: U256) -> Result<U256, ExecError>;
@@ -82,6 +84,16 @@ impl MiniEthereum {
 }
 
 impl Context for MiniEthereum {
+    fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>> {
+        Ok(self
+            .accounts
+            .get(&address)
+            .map(|a| a.code.clone())
+            .unwrap_or_default())
+    }
+    fn block_hash(&self, _block_number: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(U256::zero())
+    }
     fn info(&self, inf: Info) -> Result<U256, Box<dyn Error>> {
         match inf {
             _ => Ok(U256::zero()),

@@ -2,6 +2,7 @@ use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
 use crate::error::ExecError;
+use crate::keccak::keccak;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::u256::U256;
@@ -61,10 +62,40 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCaller {
         &self,
         _ctx: &mut C,
         machine: &mut Machine,
-
         call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.stack.push(call_info.caller);
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeBlockHash;
+impl<C: Context> OpcodeHandler<C> for OpcodeBlockHash {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let block_number = machine.pop_stack()?;
+        machine.stack.push(ctx.block_hash(block_number)?);
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeSelfBalance;
+impl<C: Context> OpcodeHandler<C> for OpcodeSelfBalance {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        machine.stack.push(ctx.balance(machine.address)?);
         machine.pc += 1;
         Ok(None)
     }
@@ -176,6 +207,60 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCalldataLoad {
                 .unwrap_or_default();
         }
         machine.stack.push(U256::from_big_endian(&ret));
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeExtCodeSize;
+impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeSize {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let addr = machine.pop_stack()?;
+        let code = ctx.code(addr)?;
+        machine.stack.push(U256::from(code.len() as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeExtCodeCopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeCopy {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let addr = machine.pop_stack()?;
+        let dest_offset = machine.pop_stack()?.to_usize()?;
+        let offset = machine.pop_stack()?.to_usize()?;
+        let size = machine.pop_stack()?.to_usize()?;
+        let code = ctx.code(addr)?;
+        machine.mem_put(dest_offset, &code[offset..offset + size]);
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeExtCodeHash;
+impl<C: Context> OpcodeHandler<C> for OpcodeExtCodeHash {
+    fn call(
+        &self,
+        ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        let addr = machine.pop_stack()?;
+        let code_hash = keccak(&ctx.code(addr)?);
+        machine.stack.push(U256::from_big_endian(&code_hash));
         machine.pc += 1;
         Ok(None)
     }

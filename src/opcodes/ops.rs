@@ -171,7 +171,15 @@ impl<C: Context> OpcodeHandler<C> for OpcodeBinaryOp {
                 }
                 result
             }
-            Self::SignExtend => return Err(ExecError::Revert(RevertError::UnknownOpcode(0x0b))),
+            Self::SignExtend => {
+                let bytes_1 = a.to_usize()?;
+                let is_neg = b.bit(bytes_1 * 8 + 7);
+                if is_neg {
+                    b + U256::MAX << ((bytes_1 + 1) * 8)
+                } else {
+                    b
+                }
+            }
         });
         machine.pc += 1;
         Ok(None)

@@ -50,6 +50,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCall {
                 }
                 ExecutionResult::Returned(ret) => {
                     machine.mem_put(ret_offset, &ret[..ret_size]);
+                    machine.last_return = Some(ret);
                     machine.stack.push(U256::one());
                 }
             },
@@ -60,10 +61,54 @@ impl<C: Context> OpcodeHandler<C> for OpcodeCall {
                 ExecError::Revert(e) => {
                     if let RevertError::Revert(ret) = e {
                         machine.mem_put(ret_offset, &ret[..ret_size]);
+                        machine.last_return = Some(ret);
+                    } else {
+                        machine.last_return = Some(vec![]);
                     }
                     machine.stack.push(U256::zero());
                 }
             },
+        }
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeReturnDataSize;
+impl<C: Context> OpcodeHandler<C> for OpcodeReturnDataSize {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        if let Some(dat) = &machine.last_return {
+            machine.stack.push(U256::from(dat.len() as u64));
+        } else {
+            return Err(ExecError::Revert(RevertError::ReturnDataUnavailable));
+        }
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeReturnDataCopy;
+impl<C: Context> OpcodeHandler<C> for OpcodeReturnDataCopy {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine,
+        _call_info: &CallInfo,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        if let Some(dat) = machine.last_return.clone() {
+            let dest_addr = machine.pop_stack()?.to_usize()?;
+            let addr = machine.pop_stack()?.to_usize()?;
+            let size = machine.pop_stack()?.to_usize()?;
+            machine.mem_put(dest_addr, &dat[addr..addr + size]);
+        } else {
+            return Err(ExecError::Revert(RevertError::ReturnDataUnavailable));
         }
         machine.pc += 1;
         Ok(None)

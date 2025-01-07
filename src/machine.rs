@@ -22,6 +22,7 @@ pub struct Machine {
     pub stack: Vec<U256>,
     pub memory: Vec<u8>,
     pub transient: HashMap<U256, U256>,
+    pub last_return: Option<Vec<u8>>,
 }
 
 impl Machine {
@@ -34,6 +35,7 @@ impl Machine {
             stack: Vec::new(),
             memory: Vec::new(),
             transient: HashMap::new(),
+            last_return: None,
         }
     }
     pub fn run<C: Context>(
@@ -53,8 +55,7 @@ impl Machine {
         opcode_table.insert(0x08, Box::new(OpcodeModularOp::AddMod));
         opcode_table.insert(0x09, Box::new(OpcodeModularOp::MulMod));
         opcode_table.insert(0x0a, Box::new(OpcodeBinaryOp::Exp));
-        opcode_table.insert(0x0b, Box::new(OpcodeUnsupported(0x0b)));
-
+        opcode_table.insert(0x0b, Box::new(OpcodeBinaryOp::SignExtend));
         opcode_table.insert(0x10, Box::new(OpcodeBinaryOp::Lt));
         opcode_table.insert(0x11, Box::new(OpcodeBinaryOp::Gt));
         opcode_table.insert(0x12, Box::new(OpcodeBinaryOp::Slt));
@@ -69,9 +70,7 @@ impl Machine {
         opcode_table.insert(0x1b, Box::new(OpcodeBinaryOp::Shl));
         opcode_table.insert(0x1c, Box::new(OpcodeBinaryOp::Shr));
         opcode_table.insert(0x1d, Box::new(OpcodeBinaryOp::Sar));
-
         opcode_table.insert(0x20, Box::new(OpcodeKeccak));
-
         opcode_table.insert(0x30, Box::new(OpcodeAddress));
         opcode_table.insert(0x31, Box::new(OpcodeBalance));
         opcode_table.insert(0x32, Box::new(OpcodeOrigin));
@@ -83,23 +82,22 @@ impl Machine {
         opcode_table.insert(0x38, Box::new(OpcodeCodeSize));
         opcode_table.insert(0x39, Box::new(OpcodeCodeCopy));
         opcode_table.insert(0x3a, Box::new(OpcodeInfo(Info::GasPrice)));
-        // opcode_table.insert(0x3b, Box::new(OpcodeExtCodeSize));
-        // opcode_table.insert(0x3c, Box::new(OpcodeExtCodeCopy));
-        // opcode_table.insert(0x3d, Box::new(OpcodeReturnDataSize));
-        // opcode_table.insert(0x3e, Box::new(OpcodeReturnDataCopy));
-        // opcode_table.insert(0x3f, Box::new(OpcodeExtCodeHash));
-        // opcode_table.insert(0x40, Box::new(OpcodeBlockHash));
+        opcode_table.insert(0x3b, Box::new(OpcodeExtCodeSize));
+        opcode_table.insert(0x3c, Box::new(OpcodeExtCodeCopy));
+        opcode_table.insert(0x3d, Box::new(OpcodeReturnDataSize));
+        opcode_table.insert(0x3e, Box::new(OpcodeReturnDataCopy));
+        opcode_table.insert(0x3f, Box::new(OpcodeExtCodeHash));
+        opcode_table.insert(0x40, Box::new(OpcodeBlockHash));
         opcode_table.insert(0x41, Box::new(OpcodeInfo(Info::Coinbase)));
         opcode_table.insert(0x42, Box::new(OpcodeInfo(Info::Timestamp)));
         opcode_table.insert(0x43, Box::new(OpcodeInfo(Info::Number)));
         opcode_table.insert(0x44, Box::new(OpcodeInfo(Info::PrevRandao)));
-        //opcode_table.insert(0x45, Box::new(OpcodeGasLimit));
+        opcode_table.insert(0x45, Box::new(OpcodeInfo(Info::GasLimit)));
         opcode_table.insert(0x46, Box::new(OpcodeInfo(Info::ChainId)));
-        //opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
+        opcode_table.insert(0x47, Box::new(OpcodeSelfBalance));
         opcode_table.insert(0x48, Box::new(OpcodeInfo(Info::BaseFee)));
         //opcode_table.insert(0x49, Box::new(OpcodeBlobHash));
         opcode_table.insert(0x4a, Box::new(OpcodeInfo(Info::BlobBaseFee)));
-
         opcode_table.insert(0x50, Box::new(OpcodePop));
         opcode_table.insert(0x51, Box::new(OpcodeMload));
         opcode_table.insert(0x52, Box::new(OpcodeMstore));
@@ -121,11 +119,9 @@ impl Machine {
         for sz in 0..16 {
             opcode_table.insert(0x90 + sz, Box::new(OpcodeSwap(sz)));
         }
-
         for sz in 0..5 {
             opcode_table.insert(0xa0 + sz, Box::new(OpcodeLog(sz)));
         }
-
         opcode_table.insert(0xf0, Box::new(OpcodeCreate));
         opcode_table.insert(0xf1, Box::new(OpcodeCall::Call));
         opcode_table.insert(0xf2, Box::new(OpcodeUnsupported(0xf2)));

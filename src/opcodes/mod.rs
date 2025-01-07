@@ -15,12 +15,13 @@ mod ret;
 mod revert;
 mod swap;
 
-pub use call::OpcodeCall;
+pub use call::{OpcodeCall, OpcodeReturnDataCopy, OpcodeReturnDataSize};
 pub use create::{OpcodeCreate, OpcodeCreate2};
 pub use dup::OpcodeDup;
 pub use external::{
-    OpcodeAddress, OpcodeBalance, OpcodeCallValue, OpcodeCalldataCopy, OpcodeCalldataLoad,
-    OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy, OpcodeCodeSize, OpcodeOrigin,
+    OpcodeAddress, OpcodeBalance, OpcodeBlockHash, OpcodeCallValue, OpcodeCalldataCopy,
+    OpcodeCalldataLoad, OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy, OpcodeCodeSize,
+    OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeOrigin, OpcodeSelfBalance,
 };
 pub use halt::OpcodeHalt;
 pub use info::OpcodeInfo;
@@ -89,6 +90,12 @@ mod tests {
     #[derive(Clone, Debug, Default)]
     pub struct TestContext;
     impl Context for TestContext {
+        fn code(&self, _address: U256) -> Result<Vec<u8>, Box<dyn Error>> {
+            unimplemented!()
+        }
+        fn block_hash(&self, _block_number: U256) -> Result<U256, Box<dyn Error>> {
+            unimplemented!()
+        }
         fn info(&self, _inf: Info) -> Result<U256, Box<dyn Error>> {
             unimplemented!()
         }
