@@ -6,6 +6,15 @@ pub enum ExecError {
     Context(Box<dyn Error>),
 }
 
+impl From<anyhow::Error> for ExecError {
+    fn from(value: anyhow::Error) -> Self {
+        ExecError::Context(value.into())
+    }
+}
+
+unsafe impl Sync for ExecError {}
+unsafe impl Send for ExecError {}
+
 impl PartialEq for ExecError {
     fn eq(&self, other: &Self) -> bool {
         if let ExecError::Revert(a) = self {
