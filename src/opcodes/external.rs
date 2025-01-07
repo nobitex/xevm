@@ -292,7 +292,7 @@ impl<C: Context> OpcodeHandler<C> for OpcodeSelfDestruct {
         _call_info: &CallInfo,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?;
-        ctx.destroy(machine.address, target);
+        ctx.destroy(machine.address, target)?;
         Ok(Some(ExecutionResult::Halted))
     }
 }

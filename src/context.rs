@@ -21,7 +21,7 @@ pub enum Info {
 }
 
 pub trait Context {
-    fn destroy(&self, _contract: U256, _target: U256) -> Result<(), ExecError>;
+    fn destroy(&self, contract: U256, target: U256) -> Result<(), ExecError>;
     fn code(&self, address: U256) -> Result<Vec<u8>, Box<dyn Error>>;
     fn blob_hash(&self, index: U256) -> Result<U256, Box<dyn Error>>;
     fn block_hash(&self, block_number: U256) -> Result<U256, Box<dyn Error>>;
