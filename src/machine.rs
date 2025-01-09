@@ -60,7 +60,7 @@ pub struct Machine<W: Word> {
     pub address: W::Addr,
     pub code: Vec<u8>,
     pub pc: usize,
-    pub gas_used: usize,
+    pub gas: usize,
     pub stack: Vec<W>,
     pub memory: Vec<u8>,
     pub transient: HashMap<W, W>,
@@ -68,12 +68,12 @@ pub struct Machine<W: Word> {
 }
 
 impl<W: Word> Machine<W> {
-    pub fn new(address: W::Addr, code: Vec<u8>) -> Self {
+    pub fn new(address: W::Addr, code: Vec<u8>, gas: usize) -> Self {
         Self {
             address,
             code,
             pc: 0,
-            gas_used: 0,
+            gas,
             stack: Vec::new(),
             memory: Vec::new(),
             transient: HashMap::new(),
@@ -164,17 +164,18 @@ impl<W: Word> Machine<W> {
         for sz in 0..5 {
             opcode_table.insert(0xa0 + sz, Box::new(OpcodeLog(sz)));
         }
-        opcode_table.insert(0xf0, Box::new(OpcodeCreate));
+        opcode_table.insert(0xf0, Box::new(OpcodeCreate::Create));
         opcode_table.insert(0xf1, Box::new(OpcodeCall::Call));
         opcode_table.insert(0xf2, Box::new(OpcodeUnsupported(0xf2)));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
         opcode_table.insert(0xf2, Box::new(OpcodeCall::DelegateCall));
-        opcode_table.insert(0xf2, Box::new(OpcodeCreate2));
+        opcode_table.insert(0xf2, Box::new(OpcodeCreate::Create2));
         opcode_table.insert(0xfa, Box::new(OpcodeCall::StaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
         opcode_table.insert(0xff, Box::new(OpcodeSelfDestruct));
 
         while self.pc < self.code.len() {
+            self.consume_gas(3)?; // Consume gas to prevent infinite loops
             let opcode = self.code[self.pc];
             if let Some(opcode_fn) = opcode_table.get(&opcode) {
                 if let Some(res) = opcode_fn.call(ctx, &mut self, call_info)? {
@@ -186,24 +187,33 @@ impl<W: Word> Machine<W> {
         }
         Ok(ExecutionResult::Halted)
     }
-
+    pub fn consume_gas(&mut self, gas: usize) -> Result<(), RevertError> {
+        if self.gas < gas {
+            Err(RevertError::InsufficientGas)
+        } else {
+            Ok(())
+        }
+    }
     pub fn mem_put(
         &mut self,
         target_offset: usize,
         source: &[u8],
         source_offset: usize,
         len: usize,
-    ) {
+    ) -> Result<(), RevertError> {
         if source_offset >= source.len() {
-            return;
+            return Ok(());
         }
         let source_end = std::cmp::min(source_offset + len, source.len());
         let src = &source[source_offset..source_end];
         let expected_len = target_offset + src.len();
         if expected_len > self.memory.len() {
+            let extension_len = expected_len - self.memory.len();
+            self.consume_gas(extension_len * 3)?;
             self.memory.resize(expected_len, 0);
         }
         self.memory[target_offset..target_offset + src.len()].copy_from_slice(src);
+        Ok(())
     }
     pub fn mem_get(&mut self, offset: usize, size: usize) -> Vec<u8> {
         let mut ret = vec![0u8; size];
@@ -212,6 +222,13 @@ impl<W: Word> Machine<W> {
             ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
         }
         ret
+    }
+    pub fn push_stack(&mut self, value: W) -> Result<(), RevertError> {
+        if self.stack.len() >= 1024 {
+            return Err(RevertError::StackFull);
+        }
+        self.stack.push(value);
+        Ok(())
     }
     pub fn pop_stack(&mut self) -> Result<W, ExecError> {
         Ok(self
@@ -229,29 +246,29 @@ mod tests {
 
     #[test]
     fn test_mem_put() {
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![]);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], 10000000);
         assert_eq!(m.memory, vec![]);
-        m.mem_put(2, &[1, 2, 3], 1, 10);
+        m.mem_put(2, &[1, 2, 3], 1, 10).unwrap();
         assert_eq!(m.memory, vec![0, 0, 2, 3]);
-        m.mem_put(1, &[4, 5, 6], 5, 10);
+        m.mem_put(1, &[4, 5, 6], 5, 10).unwrap();
         assert_eq!(m.memory, vec![0, 0, 2, 3]);
-        m.mem_put(1, &[4, 5, 6], 1, 1);
+        m.mem_put(1, &[4, 5, 6], 1, 1).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 3]);
-        m.mem_put(1, &[7, 8, 9], 1, 0);
+        m.mem_put(1, &[7, 8, 9], 1, 0).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 3]);
-        m.mem_put(3, &[7, 8, 9], 2, 10);
+        m.mem_put(3, &[7, 8, 9], 2, 10).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 9]);
-        m.mem_put(4, &[10, 11, 12, 13], 0, 2);
+        m.mem_put(4, &[10, 11, 12, 13], 0, 2).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11]);
-        m.mem_put(4, &[10, 11, 12, 13], 0, 100);
+        m.mem_put(4, &[10, 11, 12, 13], 0, 100).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11, 12, 13]);
-        m.mem_put(10, &[10, 11, 12, 13], 2, 100);
+        m.mem_put(10, &[10, 11, 12, 13], 2, 100).unwrap();
         assert_eq!(m.memory, vec![0, 5, 2, 9, 10, 11, 12, 13, 0, 0, 12, 13]);
     }
 
     #[test]
     fn test_mem_get() {
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![]);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], 10000000);
         m.memory = vec![0, 10, 20, 30, 40, 50];
         assert_eq!(m.mem_get(1, 3), vec![10, 20, 30]);
         assert_eq!(

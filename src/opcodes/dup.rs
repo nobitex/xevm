@@ -25,7 +25,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeDup {
             .get(machine.stack.len() - 1 - self.0 as usize)
             .copied()
             .ok_or(ExecError::Revert(RevertError::NotEnoughValuesOnStack))?;
-        machine.stack.push(elem);
+        machine.push_stack(elem)?;
         machine.pc += 1;
         Ok(None)
     }

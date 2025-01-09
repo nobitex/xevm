@@ -6,7 +6,7 @@ use xevm::opcodes::ExecutionResult;
 fn main() {
     let code = vec![];
     let mut ctx = MiniEthereum::new();
-    let exec_result = Machine::new(Address::ZERO, code.clone())
+    let exec_result = Machine::new(Address::ZERO, code.clone(), 10000000)
         .run(
             &mut ctx,
             &CallInfo {

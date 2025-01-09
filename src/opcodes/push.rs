@@ -19,11 +19,11 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodePush {
         if machine.code.len() - machine.pc < self.0 as usize {
             return Err(ExecError::Revert(RevertError::NotEnoughBytesInCode));
         }
-        machine.stack.push(if self.0 == 0 {
+        machine.push_stack(if self.0 == 0 {
             W::ZERO
         } else {
             W::from_big_endian(&machine.code[machine.pc + 1..machine.pc + 1 + self.0 as usize])
-        });
+        })?;
         machine.pc += 1 + self.0 as usize;
         Ok(None)
     }

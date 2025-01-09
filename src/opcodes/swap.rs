@@ -27,7 +27,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSwap {
             .ok_or(ExecError::Revert(RevertError::NotEnoughValuesOnStack))?;
         let b_val = *b;
         *b = a;
-        machine.stack.push(b_val);
+        machine.push_stack(b_val)?;
         machine.pc += 1;
         Ok(None)
     }

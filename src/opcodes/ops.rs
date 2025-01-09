@@ -51,10 +51,10 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeModularOp {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
         let n = machine.pop_stack()?;
-        machine.stack.push(match self {
+        machine.push_stack(match self {
             Self::AddMod => a.addmod(b, n),
             Self::MulMod => a.mulmod(b, n),
-        });
+        })?;
         machine.pc += 1;
         Ok(None)
     }
@@ -68,10 +68,10 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnaryOp {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
-        machine.stack.push(match self {
+        machine.push_stack(match self {
             Self::IsZero => W::from_u64((a == W::ZERO) as u64),
             Self::Not => a.not(),
-        });
+        })?;
         machine.pc += 1;
         Ok(None)
     }
@@ -86,7 +86,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let a = machine.pop_stack()?;
         let b = machine.pop_stack()?;
-        machine.stack.push(match self {
+        machine.push_stack(match self {
             Self::Add => a.add(b),
             Self::Mul => a.mul(b),
             Self::Sub => a.sub(b),
@@ -182,7 +182,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
                     x
                 }
             }
-        });
+        })?;
         machine.pc += 1;
         Ok(None)
     }

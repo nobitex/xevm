@@ -39,6 +39,8 @@ pub enum RevertError {
     BlockHashUnavailable,
     ReturnDataUnavailable,
     OutOfBounds,
+    InsufficientGas,
+    StackFull,
 }
 
 impl From<Box<dyn Error>> for ExecError {

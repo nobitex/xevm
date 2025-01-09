@@ -36,17 +36,21 @@ fn test_erc20_deploy() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ]);
     let contract_addr = ctx
-        .create(CallInfo {
-            origin: addr(123),
-            caller: addr(123),
-            call_value: U256::from(0),
-            calldata: creation_code,
-        })
+        .create(
+            10000000,
+            CallInfo {
+                origin: addr(123),
+                caller: addr(123),
+                call_value: U256::from(0),
+                calldata: creation_code,
+            },
+            None,
+        )
         .unwrap();
     let total_supply_sig = [0x18, 0x16, 0x0d, 0xdd];
     let call = move |ctx: &mut MiniEthereum, from: Address, inp: &[u8]| {
         ctx.call(
-            U256::ZERO,
+            10000000,
             contract_addr,
             CallInfo {
                 origin: from,

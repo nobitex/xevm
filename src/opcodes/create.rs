@@ -6,8 +6,11 @@ use super::OpcodeHandler;
 use crate::context::Context;
 use crate::machine::Machine;
 
-#[derive(Debug)]
-pub struct OpcodeCreate;
+#[derive(Debug, PartialEq)]
+pub enum OpcodeCreate {
+    Create,
+    Create2,
+}
 impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
     fn call(
         &self,
@@ -18,34 +21,14 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
+        let salt = if self == &OpcodeCreate::Create2 {
+            Some(machine.pop_stack()?)
+        } else {
+            None
+        };
         let code = machine.mem_get(offset, size);
-        let addr = ctx.create(CallInfo {
-            origin: call_info.origin,
-            caller: call_info.caller,
-            call_value: value,
-            calldata: code,
-        })?;
-        machine.stack.push(W::from_addr(addr));
-        machine.pc += 1;
-        Ok(None)
-    }
-}
-
-#[derive(Debug)]
-pub struct OpcodeCreate2;
-impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate2 {
-    fn call(
-        &self,
-        ctx: &mut C,
-        machine: &mut Machine<W>,
-        call_info: &CallInfo<W>,
-    ) -> Result<Option<ExecutionResult>, ExecError> {
-        let value = machine.pop_stack()?;
-        let offset = machine.pop_stack()?.to_usize()?;
-        let size = machine.pop_stack()?.to_usize()?;
-        let salt = machine.pop_stack()?;
-        let code = machine.mem_get(offset, size);
-        let addr = ctx.create2(
+        match ctx.create(
+            machine.gas,
             CallInfo {
                 origin: call_info.origin,
                 caller: call_info.caller,
@@ -53,8 +36,19 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate2 {
                 calldata: code,
             },
             salt,
-        )?;
-        machine.stack.push(W::from_addr(addr));
+        ) {
+            Ok(addr) => {
+                machine.push_stack(W::from_addr(addr))?;
+            }
+            Err(e) => match e {
+                ExecError::Revert(_) => {
+                    machine.push_stack(W::ZERO)?;
+                }
+                ExecError::Context(ctx_err) => {
+                    return Err(ExecError::Context(ctx_err));
+                }
+            },
+        }
         machine.pc += 1;
         Ok(None)
     }

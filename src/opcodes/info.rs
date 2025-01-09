@@ -15,7 +15,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeInfo {
         machine: &mut Machine<W>,
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(ctx.info(self.0)?);
+        machine.push_stack(ctx.info(self.0)?)?;
         Ok(None)
     }
 }

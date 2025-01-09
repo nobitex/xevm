@@ -16,7 +16,7 @@ mod revert;
 mod swap;
 
 pub use call::{OpcodeCall, OpcodeReturnDataCopy, OpcodeReturnDataSize};
-pub use create::{OpcodeCreate, OpcodeCreate2};
+pub use create::OpcodeCreate;
 pub use dup::OpcodeDup;
 pub use external::{
     OpcodeAddress, OpcodeBalance, OpcodeBlobHash, OpcodeBlockHash, OpcodeCallValue,
@@ -94,7 +94,7 @@ mod tests {
     ) {
         for (inp, expected_out) in testcases {
             let mut ctx = MiniEthereum::new();
-            let mut machine = Machine::new(Address::ZERO, vec![]);
+            let mut machine = Machine::new(Address::ZERO, vec![], 10000000);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

@@ -20,7 +20,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeKeccak {
         let size = machine.pop_stack()?.to_usize()?;
         let data = machine.mem_get(offset, size);
         let res = keccak(&data);
-        machine.stack.push(W::from_big_endian(&res));
+        machine.push_stack(W::from_big_endian(&res))?;
         machine.pc += 1;
         Ok(None)
     }

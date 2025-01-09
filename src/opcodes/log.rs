@@ -20,6 +20,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeLog {
         let size = machine.pop_stack()?.to_usize()?;
         let mut topics = Vec::new();
         for _ in 0..self.0 {
+            machine.consume_gas(375)?;
             topics.push(machine.pop_stack()?);
         }
         let data = machine.mem_get(offset, size);
