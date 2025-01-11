@@ -21,8 +21,8 @@ pub use dup::OpcodeDup;
 pub use external::{
     OpcodeAddress, OpcodeBalance, OpcodeBlobHash, OpcodeBlockHash, OpcodeCallValue,
     OpcodeCalldataCopy, OpcodeCalldataLoad, OpcodeCalldataSize, OpcodeCaller, OpcodeCodeCopy,
-    OpcodeCodeSize, OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeOrigin,
-    OpcodeSelfBalance, OpcodeSelfDestruct,
+    OpcodeCodeSize, OpcodeExtCodeCopy, OpcodeExtCodeHash, OpcodeExtCodeSize, OpcodeGas,
+    OpcodeOrigin, OpcodePc, OpcodeSelfBalance, OpcodeSelfDestruct,
 };
 pub use halt::OpcodeHalt;
 pub use info::OpcodeInfo;
@@ -30,8 +30,8 @@ pub use jump::{OpcodeJump, OpcodeJumpDest, OpcodeJumpi};
 pub use keccak::OpcodeKeccak;
 pub use log::OpcodeLog;
 pub use memory::{
-    OpcodeMcopy, OpcodeMload, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore, OpcodeTload,
-    OpcodeTstore,
+    OpcodeMcopy, OpcodeMload, OpcodeMsize, OpcodeMstore, OpcodeMstore8, OpcodeSload, OpcodeSstore,
+    OpcodeTload, OpcodeTstore,
 };
 pub use ops::{OpcodeBinaryOp, OpcodeModularOp, OpcodeUnaryOp};
 pub use pop::OpcodePop;

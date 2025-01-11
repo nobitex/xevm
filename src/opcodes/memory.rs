@@ -150,3 +150,18 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMcopy {
         Ok(None)
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodeMsize;
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMsize {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        machine.stack.push(W::from_u64(machine.memory.len() as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}

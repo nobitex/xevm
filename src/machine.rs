@@ -148,6 +148,9 @@ impl<W: Word> Machine<W> {
         opcode_table.insert(0x55, Box::new(OpcodeSstore));
         opcode_table.insert(0x56, Box::new(OpcodeJump));
         opcode_table.insert(0x57, Box::new(OpcodeJumpi));
+        opcode_table.insert(0x58, Box::new(OpcodePc));
+        opcode_table.insert(0x59, Box::new(OpcodeMsize));
+        opcode_table.insert(0x5a, Box::new(OpcodeGas));
         opcode_table.insert(0x5b, Box::new(OpcodeJumpDest));
         opcode_table.insert(0x5c, Box::new(OpcodeTload));
         opcode_table.insert(0x5d, Box::new(OpcodeTstore));

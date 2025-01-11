@@ -294,3 +294,33 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSelfDestruct {
         Ok(Some(ExecutionResult::Halted))
     }
 }
+
+#[derive(Debug)]
+pub struct OpcodePc;
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodePc {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        machine.stack.push(W::from_u64(machine.pc as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}
+
+#[derive(Debug)]
+pub struct OpcodeGas;
+impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeGas {
+    fn call(
+        &self,
+        _ctx: &mut C,
+        machine: &mut Machine<W>,
+        _call_info: &CallInfo<W>,
+    ) -> Result<Option<ExecutionResult>, ExecError> {
+        machine.stack.push(W::from_u64(machine.gas as u64));
+        machine.pc += 1;
+        Ok(None)
+    }
+}
