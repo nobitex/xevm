@@ -1,4 +1,5 @@
 use super::ExecutionResult;
+use crate::context::ContextMut;
 use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
@@ -21,6 +22,11 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         machine: &mut Machine<W>,
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
+        let is_static = call_info.is_static || self == &OpcodeCall::StaticCall;
+        if is_static && call_info.call_value != W::ZERO {
+            return Err(ExecError::Revert(RevertError::CannotMutateStatic));
+        }
+
         let mut new_call_info = call_info.clone();
 
         let gas = machine.pop_stack()?.to_usize()?;
@@ -35,15 +41,13 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         let args = machine.mem_get(args_offset, args_size);
 
         new_call_info.calldata = args;
-        match self {
-            OpcodeCall::DelegateCall => {
-                new_call_info.caller = call_info.caller;
-            }
-            _ => {
-                new_call_info.caller = machine.address;
-            }
-        }
-        match ctx.call(gas, address, new_call_info) {
+        new_call_info.caller = match self {
+            OpcodeCall::DelegateCall => call_info.caller,
+            _ => machine.address,
+        };
+        new_call_info.is_static = is_static;
+
+        match ctx.as_mut().call(gas, address, new_call_info) {
             Ok(exec_result) => match exec_result {
                 ExecutionResult::Halted => {
                     machine.last_return = Some(vec![]);

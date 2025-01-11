@@ -23,11 +23,18 @@ pub enum Info {
 }
 
 pub trait Context<W: Word> {
+    type Mutable: ContextMut<W>;
     fn destroy(&self, contract: W::Addr, target: W::Addr) -> Result<(), ExecError>;
     fn code(&self, address: W::Addr) -> Result<Vec<u8>, Box<dyn Error>>;
     fn blob_hash(&self, index: W) -> Result<W, Box<dyn Error>>;
     fn block_hash(&self, block_number: W) -> Result<W, Box<dyn Error>>;
     fn info(&self, inf: Info) -> Result<W, Box<dyn Error>>;
+    fn balance(&self, address: W::Addr) -> Result<W, Box<dyn Error>>;
+    fn sload(&self, contract: W::Addr, address: W) -> Result<W, Box<dyn Error>>;
+    fn as_mut(&mut self) -> &mut Self::Mutable;
+}
+
+pub trait ContextMut<W: Word>: Context<W> {
     fn create(
         &mut self,
         gas: usize,
@@ -40,8 +47,6 @@ pub trait Context<W: Word> {
         address: W::Addr,
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
-    fn balance(&self, address: W::Addr) -> Result<W, Box<dyn Error>>;
-    fn sload(&self, contract: W::Addr, address: W) -> Result<W, Box<dyn Error>>;
     fn sstore(&mut self, contract: W::Addr, address: W, value: W) -> Result<(), Box<dyn Error>>;
     fn log(&mut self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
 }
@@ -93,6 +98,10 @@ impl MiniEthereum {
 }
 
 impl Context<U256> for MiniEthereum {
+    type Mutable = Self;
+    fn as_mut(&mut self) -> &mut Self::Mutable {
+        self
+    }
     fn destroy(&self, _contract: Address, _target: Address) -> Result<(), ExecError> {
         Err(ExecError::Revert(RevertError::UnknownOpcode(0xff)))
     }
@@ -114,6 +123,24 @@ impl Context<U256> for MiniEthereum {
             _ => Ok(U256::ZERO),
         }
     }
+
+    fn balance(&self, address: Address) -> Result<U256, Box<dyn Error>> {
+        Ok(self
+            .accounts
+            .get(&address)
+            .map(|a| a.value)
+            .unwrap_or_default())
+    }
+    fn sload(&self, contract: Address, address: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(if let Some(acc) = self.accounts.get(&contract) {
+            acc.storage.get(&address).copied().unwrap_or_default()
+        } else {
+            Default::default()
+        })
+    }
+}
+
+impl ContextMut<U256> for MiniEthereum {
     fn create(
         &mut self,
         gas: usize,
@@ -157,6 +184,7 @@ impl Context<U256> for MiniEthereum {
                 calldata: vec![],
                 origin: call_info.origin,
                 caller: call_info.caller,
+                is_static: false,
             },
         )?;
 
@@ -190,20 +218,6 @@ impl Context<U256> for MiniEthereum {
         let machine = Machine::new(address, contract.code.clone(), gas);
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
-    }
-    fn balance(&self, address: Address) -> Result<U256, Box<dyn Error>> {
-        Ok(self
-            .accounts
-            .get(&address)
-            .map(|a| a.value)
-            .unwrap_or_default())
-    }
-    fn sload(&self, contract: Address, address: U256) -> Result<U256, Box<dyn Error>> {
-        Ok(if let Some(acc) = self.accounts.get(&contract) {
-            acc.storage.get(&address).copied().unwrap_or_default()
-        } else {
-            Default::default()
-        })
     }
     fn sstore(
         &mut self,
@@ -283,6 +297,7 @@ mod tests {
                     caller: addr(123),
                     call_value: U256::from_u64(2),
                     calldata: COUNTER_CODE.to_vec(),
+                    is_static: false,
                 },
                 None,
             )
@@ -299,6 +314,7 @@ mod tests {
                     caller: Address::ZERO,
                     call_value: U256::ZERO,
                     calldata: inp.to_vec(),
+                    is_static: false,
                 },
             )
             .unwrap()
@@ -329,6 +345,7 @@ mod tests {
                 caller: addr(123),
                 call_value: U256::from_u64(0),
                 calldata: COUNTER_CODE.to_vec(),
+                is_static: false,
             },
             None,
         )
@@ -352,6 +369,7 @@ mod tests {
                 caller: addr(123),
                 call_value: U256::from_u64(2),
                 calldata: vec![],
+                is_static: false,
             },
         )
         .unwrap();
@@ -368,6 +386,7 @@ mod tests {
                     caller: addr(123),
                     call_value: U256::from_u64(4),
                     calldata: vec![],
+                    is_static: false
                 },
             ),
             Err(ExecError::Revert(RevertError::InsufficientBalance))
@@ -391,6 +410,7 @@ mod tests {
                     caller: addr(123),
                     call_value: U256::from_u64(2),
                     calldata: COUNTER_CODE.to_vec(),
+                    is_static: false,
                 },
                 None,
             )
@@ -404,6 +424,7 @@ mod tests {
                     caller: addr(123),
                     call_value: U256::from_u64(2),
                     calldata: COUNTER_CODE.to_vec(),
+                    is_static: false,
                 },
                 None,
             )
@@ -431,6 +452,7 @@ mod tests {
                 caller: addr(123),
                 call_value: U256::from_u64(0),
                 calldata: COUNTER_CODE.to_vec(),
+                is_static: false,
             },
             Some(U256::from_u64(123)),
         );
@@ -441,6 +463,7 @@ mod tests {
                 caller: addr(123),
                 call_value: U256::from_u64(0),
                 calldata: COUNTER_CODE.to_vec(),
+                is_static: false,
             },
             Some(U256::from_u64(234)),
         );
@@ -462,6 +485,7 @@ mod tests {
                     caller: addr(123),
                     call_value: U256::from_u64(0),
                     calldata: COUNTER_CODE.to_vec(),
+                    is_static: false
                 },
                 Some(U256::from_u64(123))
             ),

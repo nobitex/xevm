@@ -1,7 +1,9 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
+use crate::context::ContextMut;
 use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::machine::Word;
@@ -13,9 +15,11 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeLog {
         &self,
         ctx: &mut C,
         machine: &mut Machine<W>,
-
-        _call_info: &CallInfo<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
+        if call_info.is_static {
+            return Err(ExecError::Revert(RevertError::CannotMutateStatic));
+        }
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
         let mut topics = Vec::new();
@@ -24,7 +28,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeLog {
             topics.push(machine.pop_stack()?);
         }
         let data = machine.mem_get(offset, size);
-        ctx.log(topics, data)?;
+        ctx.as_mut().log(topics, data)?;
         machine.pc += 1;
         Ok(None)
     }

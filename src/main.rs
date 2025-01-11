@@ -14,6 +14,7 @@ fn main() {
                 caller: Address::ZERO,
                 call_value: U256::ZERO,
                 calldata: vec![0xd0, 0x9d, 0xe0, 0x8a],
+                is_static: false,
             },
         )
         .unwrap();

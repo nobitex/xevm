@@ -1,7 +1,9 @@
 use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
+use crate::context::ContextMut;
 use crate::error::ExecError;
+use crate::error::RevertError;
 use crate::machine::CallInfo;
 use crate::machine::Machine;
 use crate::machine::Word;
@@ -13,12 +15,15 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSstore {
         &self,
         ctx: &mut C,
         machine: &mut Machine<W>,
-        _call_info: &CallInfo<W>,
+        call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
+        if call_info.is_static {
+            return Err(ExecError::Revert(RevertError::CannotMutateStatic));
+        }
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
         machine.consume_gas(100)?;
-        ctx.sstore(machine.address, addr, val)?;
+        ctx.as_mut().sstore(machine.address, addr, val)?;
         machine.pc += 1;
         Ok(None)
     }

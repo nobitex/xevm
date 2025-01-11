@@ -12,6 +12,7 @@ pub struct CallInfo<W: Word> {
     pub caller: W::Addr,
     pub call_value: W,
     pub calldata: Vec<u8>,
+    pub is_static: bool,
 }
 
 pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + Ord + Hash {

@@ -1,9 +1,9 @@
 use super::ExecutionResult;
-use crate::error::ExecError;
+use crate::error::{ExecError, RevertError};
 use crate::machine::{CallInfo, Word};
 
 use super::OpcodeHandler;
-use crate::context::Context;
+use crate::context::{Context, ContextMut};
 use crate::machine::Machine;
 
 #[derive(Debug, PartialEq)]
@@ -18,6 +18,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
         machine: &mut Machine<W>,
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
+        if call_info.is_static {
+            return Err(ExecError::Revert(RevertError::CannotMutateStatic));
+        }
         let value = machine.pop_stack()?;
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
@@ -27,13 +30,14 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
             None
         };
         let code = machine.mem_get(offset, size);
-        match ctx.create(
+        match ctx.as_mut().create(
             machine.gas,
             CallInfo {
                 origin: call_info.origin,
                 caller: call_info.caller,
                 call_value: value,
                 calldata: code,
+                is_static: call_info.is_static,
             },
             salt,
         ) {

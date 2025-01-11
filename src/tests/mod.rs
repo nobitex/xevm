@@ -1,7 +1,7 @@
 use alloy_primitives::primitives::Address;
 
 use crate::{
-    context::{Account, Context, MiniEthereum},
+    context::{Account, Context, ContextMut, MiniEthereum},
     machine::{CallInfo, Word},
     opcodes::ExecutionResult,
     u256::U256,
@@ -36,6 +36,7 @@ fn test_erc20_deploy() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ]);
     let contract_addr = ctx
+        .as_mut()
         .create(
             10000000,
             CallInfo {
@@ -43,23 +44,26 @@ fn test_erc20_deploy() {
                 caller: addr(123),
                 call_value: U256::from(0),
                 calldata: creation_code,
+                is_static: false,
             },
             None,
         )
         .unwrap();
     let total_supply_sig = [0x18, 0x16, 0x0d, 0xdd];
     let call = move |ctx: &mut MiniEthereum, from: Address, inp: &[u8]| {
-        ctx.call(
-            10000000,
-            contract_addr,
-            CallInfo {
-                origin: from,
-                caller: from,
-                call_value: U256::ZERO,
-                calldata: inp.to_vec(),
-            },
-        )
-        .unwrap()
+        ctx.as_mut()
+            .call(
+                10000000,
+                contract_addr,
+                CallInfo {
+                    origin: from,
+                    caller: from,
+                    call_value: U256::ZERO,
+                    calldata: inp.to_vec(),
+                    is_static: false,
+                },
+            )
+            .unwrap()
     };
     assert_eq!(
         call(&mut ctx, addr(123), &total_supply_sig),

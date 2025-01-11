@@ -41,6 +41,7 @@ pub enum RevertError {
     OutOfBounds,
     InsufficientGas,
     StackFull,
+    CannotMutateStatic,
 }
 
 impl From<Box<dyn Error>> for ExecError {
