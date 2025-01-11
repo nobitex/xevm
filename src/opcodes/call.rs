@@ -46,6 +46,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         match ctx.call(gas, address, new_call_info) {
             Ok(exec_result) => match exec_result {
                 ExecutionResult::Halted => {
+                    machine.last_return = Some(vec![]);
                     machine.push_stack(W::ONE)?;
                 }
                 ExecutionResult::Returned(ret) => {
