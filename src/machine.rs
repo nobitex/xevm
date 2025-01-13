@@ -195,6 +195,7 @@ impl<W: Word> Machine<W> {
         if self.gas < gas {
             Err(RevertError::InsufficientGas)
         } else {
+            self.gas -= gas;
             Ok(())
         }
     }
