@@ -48,7 +48,12 @@ pub trait ContextMut<W: Word>: Context<W> {
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
     fn sstore(&mut self, contract: W::Addr, address: W, value: W) -> Result<(), Box<dyn Error>>;
-    fn log(&mut self, topics: Vec<W>, data: Vec<u8>) -> Result<(), Box<dyn Error>>;
+    fn log(
+        &mut self,
+        address: W::Addr,
+        topics: Vec<W>,
+        data: Vec<u8>,
+    ) -> Result<(), Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -232,8 +237,13 @@ impl ContextMut<U256> for MiniEthereum {
             .insert(address, value);
         Ok(())
     }
-    fn log(&mut self, topics: Vec<U256>, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
-        println!("New log! {:?} {:?}", topics, data);
+    fn log(
+        &mut self,
+        address: Address,
+        topics: Vec<U256>,
+        data: Vec<u8>,
+    ) -> Result<(), Box<dyn Error>> {
+        println!("New log from {}: {:?} {:?}", address, topics, data);
         Ok(())
     }
 }
