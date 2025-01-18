@@ -84,7 +84,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnsupported {
 mod tests {
     use alloy_primitives::primitives::Address;
 
-    use crate::{context::MiniEthereum, u256::U256};
+    use crate::{context::MiniEthereum, machine::GasTracker, u256::U256};
 
     use super::*;
 
@@ -93,8 +93,9 @@ mod tests {
         testcases: &[(&[U256], Option<&[U256]>)],
     ) {
         for (inp, expected_out) in testcases {
+            let mut gt = GasTracker::new(10000000);
             let mut ctx = MiniEthereum::new();
-            let mut machine = Machine::new(Address::ZERO, vec![], 10000000);
+            let mut machine = Machine::new(Address::ZERO, vec![], &mut gt);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

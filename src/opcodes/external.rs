@@ -319,7 +319,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeGas {
         machine: &mut Machine<W>,
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.stack.push(W::from_u64(machine.gas as u64));
+        machine
+            .stack
+            .push(W::from_u64(machine.gas_tracker.remaining_gas() as u64));
         machine.pc += 1;
         Ok(None)
     }

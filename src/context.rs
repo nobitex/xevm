@@ -3,7 +3,7 @@ use alloy_primitives::primitives::Address;
 use crate::{
     error::{ExecError, RevertError},
     keccak::keccak,
-    machine::{CallInfo, Machine, Word},
+    machine::{CallInfo, GasTracker, Machine, Word},
     opcodes::ExecutionResult,
     u256::U256,
 };
@@ -37,13 +37,13 @@ pub trait Context<W: Word> {
 pub trait ContextMut<W: Word>: Context<W> {
     fn create(
         &mut self,
-        gas: usize,
+        gas_tracker: &mut GasTracker,
         call_info: CallInfo<W>,
         salt: Option<W>,
     ) -> Result<W::Addr, ExecError>;
     fn call(
         &mut self,
-        gas: usize,
+        gas_tracker: &mut GasTracker,
         address: W::Addr,
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
@@ -148,7 +148,7 @@ impl Context<U256> for MiniEthereum {
 impl ContextMut<U256> for MiniEthereum {
     fn create(
         &mut self,
-        gas: usize,
+        gas_tracker: &mut GasTracker,
         call_info: CallInfo<U256>,
         salt: Option<U256>,
     ) -> Result<Address, ExecError> {
@@ -182,7 +182,7 @@ impl ContextMut<U256> for MiniEthereum {
         self.accounts.entry(contract_addr).or_default();
         self.accounts.get_mut(&contract_addr).unwrap().value = call_info.call_value;
 
-        let exec_result = Machine::new(contract_addr, call_info.calldata, gas).run(
+        let exec_result = Machine::new(contract_addr, call_info.calldata, gas_tracker).run(
             self,
             &CallInfo {
                 call_value: call_info.call_value,
@@ -204,7 +204,7 @@ impl ContextMut<U256> for MiniEthereum {
     }
     fn call(
         &mut self,
-        gas: usize,
+        gas_tracker: &mut GasTracker,
         address: Address,
         call_info: CallInfo<U256>,
     ) -> Result<ExecutionResult, ExecError> {
@@ -220,7 +220,7 @@ impl ContextMut<U256> for MiniEthereum {
         }
         let contract = self.accounts.entry(address).or_default();
         contract.value = contract.value + call_info.call_value;
-        let machine = Machine::new(address, contract.code.clone(), gas);
+        let machine = Machine::new(address, contract.code.clone(), gas_tracker);
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
     }
@@ -292,6 +292,7 @@ mod tests {
 
     #[test]
     fn test_counter_contract() {
+        let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
@@ -301,7 +302,7 @@ mod tests {
         });
         let contract_addr = ctx
             .create(
-                10000000,
+                &mut gt,
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
@@ -316,8 +317,9 @@ mod tests {
         let set_number_sig = [0x3f, 0xb5, 0xc1, 0xcb];
         let increment_sig = [0xd0, 0x9d, 0xe0, 0x8a];
         let call = move |ctx: &mut MiniEthereum, inp: &[u8]| {
+            let mut gt = GasTracker::new(10000000);
             ctx.call(
-                10000000,
+                &mut gt,
                 contract_addr,
                 CallInfo {
                     origin: Address::ZERO,
@@ -347,9 +349,10 @@ mod tests {
 
     #[test]
     fn test_context() {
+        let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         ctx.create(
-            10000000,
+            &mut gt,
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
@@ -364,6 +367,7 @@ mod tests {
 
     #[test]
     fn test_call() {
+        let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
@@ -372,7 +376,7 @@ mod tests {
             storage: Default::default(),
         });
         ctx.call(
-            10000000,
+            &mut gt,
             addr(234),
             CallInfo {
                 origin: Address::ZERO,
@@ -389,7 +393,7 @@ mod tests {
         assert_eq!(ctx.balance(addr(234)).unwrap(), U256::from(2));
         assert_eq!(
             ctx.call(
-                10000000,
+                &mut gt,
                 addr(234),
                 CallInfo {
                     origin: Address::ZERO,
@@ -405,6 +409,7 @@ mod tests {
 
     #[test]
     fn test_create() {
+        let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         ctx.accounts.entry(addr(123)).or_insert(Account {
             nonce: U256::from_u64(0),
@@ -414,7 +419,7 @@ mod tests {
         });
         let contract_addr_1 = ctx
             .create(
-                10000000,
+                &mut gt,
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
@@ -428,7 +433,7 @@ mod tests {
         assert_eq!(ctx.accounts.get(&addr(123)).unwrap().nonce, U256::from(1));
         let contract_addr_2 = ctx
             .create(
-                10000000,
+                &mut gt,
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
@@ -454,9 +459,10 @@ mod tests {
     }
     #[test]
     fn test_context_prevent_redeploy() {
+        let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         let res1 = ctx.create(
-            10000000,
+            &mut gt,
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
@@ -467,7 +473,7 @@ mod tests {
             Some(U256::from_u64(123)),
         );
         let res2 = ctx.create(
-            10000000,
+            &mut gt,
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
@@ -489,7 +495,7 @@ mod tests {
         );
         assert_eq!(
             ctx.create(
-                10000000,
+                &mut gt,
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),

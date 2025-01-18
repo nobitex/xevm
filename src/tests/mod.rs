@@ -2,7 +2,7 @@ use alloy_primitives::primitives::Address;
 
 use crate::{
     context::{Account, Context, ContextMut, MiniEthereum},
-    machine::{CallInfo, Word},
+    machine::{CallInfo, GasTracker, Word},
     opcodes::ExecutionResult,
     u256::U256,
 };
@@ -16,6 +16,7 @@ fn addr(v: u8) -> Address {
 mod erc20;
 #[test]
 fn test_erc20_deploy() {
+    let mut gt = GasTracker::new(10000000);
     let mut ctx = MiniEthereum::default();
     ctx.accounts.entry(addr(123)).or_insert(Account {
         nonce: U256::from(0),
@@ -38,7 +39,7 @@ fn test_erc20_deploy() {
     let contract_addr = ctx
         .as_mut()
         .create(
-            10000000,
+            &mut gt,
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
@@ -51,9 +52,10 @@ fn test_erc20_deploy() {
         .unwrap();
     let total_supply_sig = [0x18, 0x16, 0x0d, 0xdd];
     let call = move |ctx: &mut MiniEthereum, from: Address, inp: &[u8]| {
+        let mut gt = GasTracker::new(10000000);
         ctx.as_mut()
             .call(
-                10000000,
+                &mut gt,
                 contract_addr,
                 CallInfo {
                     origin: from,

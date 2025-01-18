@@ -57,24 +57,50 @@ pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + O
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct Machine<W: Word> {
+pub struct GasTracker {
+    pub gas_limit: usize,
+    pub gas_used: usize,
+}
+
+impl GasTracker {
+    pub fn remaining_gas(&self) -> usize {
+        self.gas_limit - self.gas_used
+    }
+    pub fn new(gas_limit: usize) -> Self {
+        Self {
+            gas_limit,
+            gas_used: 0,
+        }
+    }
+    pub fn consume_gas(&mut self, gas: usize) -> Result<(), RevertError> {
+        if self.gas_used + gas > self.gas_limit {
+            Err(RevertError::InsufficientGas)
+        } else {
+            self.gas_used += gas;
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Machine<'a, W: Word> {
+    pub gas_tracker: &'a mut GasTracker,
     pub address: W::Addr,
     pub code: Vec<u8>,
     pub pc: usize,
-    pub gas: usize,
     pub stack: Vec<W>,
     pub memory: Vec<u8>,
     pub transient: HashMap<W, W>,
     pub last_return: Option<Vec<u8>>,
 }
 
-impl<W: Word> Machine<W> {
-    pub fn new(address: W::Addr, code: Vec<u8>, gas: usize) -> Self {
+impl<'a, W: Word> Machine<'a, W> {
+    pub fn new(address: W::Addr, code: Vec<u8>, gas_tracker: &'a mut GasTracker) -> Self {
         Self {
+            gas_tracker,
             address,
             code,
             pc: 0,
-            gas,
             stack: Vec::new(),
             memory: Vec::new(),
             transient: HashMap::new(),
@@ -192,12 +218,7 @@ impl<W: Word> Machine<W> {
         Ok(ExecutionResult::Halted)
     }
     pub fn consume_gas(&mut self, gas: usize) -> Result<(), RevertError> {
-        if self.gas < gas {
-            Err(RevertError::InsufficientGas)
-        } else {
-            self.gas -= gas;
-            Ok(())
-        }
+        self.gas_tracker.consume_gas(gas)
     }
     pub fn mem_put(
         &mut self,
@@ -245,13 +266,15 @@ impl<W: Word> Machine<W> {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::primitives::{Address, U256};
 
+    use super::GasTracker;
     use crate::machine::Machine;
+    use alloy_primitives::primitives::{Address, U256};
 
     #[test]
     fn test_mem_put() {
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![], 10000000);
+        let mut gt = GasTracker::new(10000000);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt);
         assert_eq!(m.memory, vec![]);
         m.mem_put(2, &[1, 2, 3], 1, 10).unwrap();
         assert_eq!(m.memory, vec![0, 0, 2, 3]);
@@ -273,7 +296,8 @@ mod tests {
 
     #[test]
     fn test_mem_get() {
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![], 10000000);
+        let mut gt = GasTracker::new(10000000);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt);
         m.memory = vec![0, 10, 20, 30, 40, 50];
         assert_eq!(m.mem_get(1, 3), vec![10, 20, 30]);
         assert_eq!(

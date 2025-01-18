@@ -1,6 +1,6 @@
 use super::ExecutionResult;
 use crate::error::{ExecError, RevertError};
-use crate::machine::{CallInfo, Word};
+use crate::machine::{CallInfo, GasTracker, Word};
 
 use super::OpcodeHandler;
 use crate::context::{Context, ContextMut};
@@ -30,8 +30,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
             None
         };
         let code = machine.mem_get(offset, size);
+        let mut gas_tracker = GasTracker::new(machine.gas_tracker.remaining_gas());
         match ctx.as_mut().create(
-            machine.gas,
+            &mut gas_tracker,
             CallInfo {
                 origin: call_info.origin,
                 caller: call_info.caller,
@@ -53,6 +54,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
                 }
             },
         }
+        machine.consume_gas(gas_tracker.gas_used)?;
         machine.pc += 1;
         Ok(None)
     }

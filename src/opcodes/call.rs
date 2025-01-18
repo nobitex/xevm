@@ -3,6 +3,7 @@ use crate::context::ContextMut;
 use crate::error::ExecError;
 use crate::error::RevertError;
 use crate::machine::CallInfo;
+use crate::machine::GasTracker;
 use crate::machine::Word;
 
 use super::OpcodeHandler;
@@ -47,7 +48,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         };
         new_call_info.is_static = is_static;
 
-        match ctx.as_mut().call(gas, address, new_call_info) {
+        let mut gas_tracker = GasTracker::new(gas);
+        match ctx.as_mut().call(&mut gas_tracker, address, new_call_info) {
             Ok(exec_result) => match exec_result {
                 ExecutionResult::Halted => {
                     machine.last_return = Some(vec![]);
@@ -74,6 +76,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
                 }
             },
         }
+        machine.consume_gas(gas_tracker.gas_used)?;
         machine.pc += 1;
         Ok(None)
     }

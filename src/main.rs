@@ -1,12 +1,13 @@
 use alloy_primitives::primitives::{Address, U256};
 use xevm::context::MiniEthereum;
-use xevm::machine::{CallInfo, Machine};
+use xevm::machine::{CallInfo, GasTracker, Machine};
 use xevm::opcodes::ExecutionResult;
 
 fn main() {
     let code = vec![];
+    let mut gas_tracker = GasTracker::new(10000000);
     let mut ctx = MiniEthereum::new();
-    let exec_result = Machine::new(Address::ZERO, code.clone(), 10000000)
+    let exec_result = Machine::new(Address::ZERO, code.clone(), &mut gas_tracker)
         .run(
             &mut ctx,
             &CallInfo {
