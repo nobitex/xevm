@@ -87,3 +87,12 @@ impl Into<Vec<u8>> for RevertError {
         }
     }
 }
+
+impl Into<Vec<u8>> for &RevertError {
+    fn into(self) -> Vec<u8> {
+        match self {
+            RevertError::Revert(data) => data.clone(),
+            _ => vec![],
+        }
+    }
+}
