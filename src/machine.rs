@@ -74,6 +74,7 @@ impl GasTracker {
     }
     pub fn consume_gas(&mut self, gas: usize) -> Result<(), RevertError> {
         if self.gas_used + gas > self.gas_limit {
+            self.gas_used = self.gas_limit;
             Err(RevertError::InsufficientGas)
         } else {
             self.gas_used += gas;
