@@ -26,7 +26,7 @@ impl PartialEq for ExecError {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RevertError {
     UnknownOpcode(u8),
     NotEnoughValuesOnStack,
