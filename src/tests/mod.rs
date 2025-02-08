@@ -39,6 +39,7 @@ fn test_erc20_deploy() {
     let contract_addr = ctx
         .as_mut()
         .create(
+            1024,
             &mut gt,
             CallInfo {
                 origin: addr(123),
@@ -55,6 +56,7 @@ fn test_erc20_deploy() {
         let mut gt = GasTracker::new(10000000);
         ctx.as_mut()
             .call(
+                1024,
                 &mut gt,
                 contract_addr,
                 CallInfo {

@@ -95,7 +95,7 @@ mod tests {
         for (inp, expected_out) in testcases {
             let mut gt = GasTracker::new(10000000);
             let mut ctx = MiniEthereum::new();
-            let mut machine = Machine::new(Address::ZERO, vec![], &mut gt);
+            let mut machine = Machine::new(Address::ZERO, vec![], &mut gt, 1024);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);

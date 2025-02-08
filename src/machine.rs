@@ -92,10 +92,16 @@ pub struct Machine<'a, W: Word> {
     pub stack: Vec<W>,
     pub memory: Vec<u8>,
     pub last_return: Option<Vec<u8>>,
+    pub stack_size: usize,
 }
 
 impl<'a, W: Word> Machine<'a, W> {
-    pub fn new(address: W::Addr, code: Vec<u8>, gas_tracker: &'a mut GasTracker) -> Self {
+    pub fn new(
+        address: W::Addr,
+        code: Vec<u8>,
+        gas_tracker: &'a mut GasTracker,
+        stack_size: usize,
+    ) -> Self {
         Self {
             gas_tracker,
             address,
@@ -104,6 +110,7 @@ impl<'a, W: Word> Machine<'a, W> {
             stack: Vec::new(),
             memory: Vec::new(),
             last_return: None,
+            stack_size,
         }
     }
     pub fn run<C: Context<W>>(
@@ -249,7 +256,7 @@ impl<'a, W: Word> Machine<'a, W> {
         ret
     }
     pub fn push_stack(&mut self, value: W) -> Result<(), RevertError> {
-        if self.stack.len() >= 1024 {
+        if self.stack.len() >= self.stack_size {
             return Err(RevertError::StackFull);
         }
         self.stack.push(value);
@@ -273,7 +280,7 @@ mod tests {
     #[test]
     fn test_mem_put() {
         let mut gt = GasTracker::new(10000000);
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt, 1024);
         assert_eq!(m.memory, vec![]);
         m.mem_put(2, &[1, 2, 3], 1, 10).unwrap();
         assert_eq!(m.memory, vec![0, 0, 2, 3]);
@@ -296,7 +303,7 @@ mod tests {
     #[test]
     fn test_mem_get() {
         let mut gt = GasTracker::new(10000000);
-        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt);
+        let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt, 1024);
         m.memory = vec![0, 10, 20, 30, 40, 50];
         assert_eq!(m.mem_get(1, 3), vec![10, 20, 30]);
         assert_eq!(

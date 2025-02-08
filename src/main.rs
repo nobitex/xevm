@@ -7,7 +7,7 @@ fn main() {
     let code = vec![];
     let mut gas_tracker = GasTracker::new(10000000);
     let mut ctx = MiniEthereum::new();
-    let exec_result = Machine::new(Address::ZERO, code.clone(), &mut gas_tracker)
+    let exec_result = Machine::new(Address::ZERO, code.clone(), &mut gas_tracker, 1024)
         .run(
             &mut ctx,
             &CallInfo {

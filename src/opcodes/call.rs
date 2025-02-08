@@ -49,7 +49,11 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         new_call_info.is_static = is_static;
 
         let mut gas_tracker = GasTracker::new(gas);
-        match ctx.as_mut().call(&mut gas_tracker, address, new_call_info) {
+        let stack_size = machine.stack_size - machine.stack.len();
+        match ctx
+            .as_mut()
+            .call(stack_size, &mut gas_tracker, address, new_call_info)
+        {
             Ok(exec_result) => match exec_result {
                 ExecutionResult::Halted => {
                     machine.last_return = Some(vec![]);

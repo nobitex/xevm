@@ -38,12 +38,14 @@ pub trait Context<W: Word> {
 pub trait ContextMut<W: Word>: Context<W> {
     fn create(
         &mut self,
+        stack_size: usize,
         gas_tracker: &mut GasTracker,
         call_info: CallInfo<W>,
         salt: Option<W>,
     ) -> Result<W::Addr, ExecError>;
     fn call(
         &mut self,
+        stack_size: usize,
         gas_tracker: &mut GasTracker,
         address: W::Addr,
         call_info: CallInfo<W>,
@@ -159,6 +161,7 @@ impl ContextMut<U256> for MiniEthereum {
     }
     fn create(
         &mut self,
+        stack_size: usize,
         gas_tracker: &mut GasTracker,
         call_info: CallInfo<U256>,
         salt: Option<U256>,
@@ -193,16 +196,17 @@ impl ContextMut<U256> for MiniEthereum {
         self.accounts.entry(contract_addr).or_default();
         self.accounts.get_mut(&contract_addr).unwrap().value = call_info.call_value;
 
-        let exec_result = Machine::new(contract_addr, call_info.calldata, gas_tracker).run(
-            self,
-            &CallInfo {
-                call_value: call_info.call_value,
-                calldata: vec![],
-                origin: call_info.origin,
-                caller: call_info.caller,
-                is_static: false,
-            },
-        )?;
+        let exec_result = Machine::new(contract_addr, call_info.calldata, gas_tracker, stack_size)
+            .run(
+                self,
+                &CallInfo {
+                    call_value: call_info.call_value,
+                    calldata: vec![],
+                    origin: call_info.origin,
+                    caller: call_info.caller,
+                    is_static: false,
+                },
+            )?;
 
         match exec_result {
             ExecutionResult::Halted => {}
@@ -215,6 +219,7 @@ impl ContextMut<U256> for MiniEthereum {
     }
     fn call(
         &mut self,
+        stack_size: usize,
         gas_tracker: &mut GasTracker,
         address: Address,
         call_info: CallInfo<U256>,
@@ -231,7 +236,7 @@ impl ContextMut<U256> for MiniEthereum {
         }
         let contract = self.accounts.entry(address).or_default();
         contract.value = contract.value + call_info.call_value;
-        let machine = Machine::new(address, contract.code.clone(), gas_tracker);
+        let machine = Machine::new(address, contract.code.clone(), gas_tracker, stack_size);
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
     }
@@ -313,6 +318,7 @@ mod tests {
         });
         let contract_addr = ctx
             .create(
+                1024,
                 &mut gt,
                 CallInfo {
                     origin: addr(123),
@@ -330,6 +336,7 @@ mod tests {
         let call = move |ctx: &mut MiniEthereum, inp: &[u8]| {
             let mut gt = GasTracker::new(10000000);
             ctx.call(
+                1024,
                 &mut gt,
                 contract_addr,
                 CallInfo {
@@ -363,6 +370,7 @@ mod tests {
         let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         ctx.create(
+            1024,
             &mut gt,
             CallInfo {
                 origin: addr(123),
@@ -387,6 +395,7 @@ mod tests {
             storage: Default::default(),
         });
         ctx.call(
+            1024,
             &mut gt,
             addr(234),
             CallInfo {
@@ -404,6 +413,7 @@ mod tests {
         assert_eq!(ctx.balance(addr(234)).unwrap(), U256::from(2));
         assert_eq!(
             ctx.call(
+                1024,
                 &mut gt,
                 addr(234),
                 CallInfo {
@@ -430,6 +440,7 @@ mod tests {
         });
         let contract_addr_1 = ctx
             .create(
+                1024,
                 &mut gt,
                 CallInfo {
                     origin: addr(123),
@@ -444,6 +455,7 @@ mod tests {
         assert_eq!(ctx.accounts.get(&addr(123)).unwrap().nonce, U256::from(1));
         let contract_addr_2 = ctx
             .create(
+                1024,
                 &mut gt,
                 CallInfo {
                     origin: addr(123),
@@ -473,6 +485,7 @@ mod tests {
         let mut gt = GasTracker::new(10000000);
         let mut ctx = MiniEthereum::default();
         let res1 = ctx.create(
+            1024,
             &mut gt,
             CallInfo {
                 origin: addr(123),
@@ -484,6 +497,7 @@ mod tests {
             Some(U256::from_u64(123)),
         );
         let res2 = ctx.create(
+            1024,
             &mut gt,
             CallInfo {
                 origin: addr(123),
@@ -506,6 +520,7 @@ mod tests {
         );
         assert_eq!(
             ctx.create(
+                1024,
                 &mut gt,
                 CallInfo {
                     origin: addr(123),
