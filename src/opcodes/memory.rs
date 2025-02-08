@@ -50,14 +50,14 @@ pub struct OpcodeTstore;
 impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeTstore {
     fn call(
         &self,
-        _ctx: &mut C,
+        ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
         let val = machine.pop_stack()?;
-        machine.transient.insert(addr, val);
+        machine.consume_gas(100)?;
+        ctx.as_mut().tstore(addr, val)?;
         machine.pc += 1;
         Ok(None)
     }
@@ -68,15 +68,12 @@ pub struct OpcodeTload;
 impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeTload {
     fn call(
         &self,
-        _ctx: &mut C,
+        ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
-        machine
-            .stack
-            .push(machine.transient.get(&addr).copied().unwrap_or_default());
+        machine.push_stack(ctx.tload(addr)?)?;
         machine.pc += 1;
         Ok(None)
     }

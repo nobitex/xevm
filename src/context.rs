@@ -31,6 +31,7 @@ pub trait Context<W: Word> {
     fn info(&self, inf: Info) -> Result<W, Box<dyn Error>>;
     fn balance(&self, address: W::Addr) -> Result<W, Box<dyn Error>>;
     fn sload(&self, contract: W::Addr, address: W) -> Result<W, Box<dyn Error>>;
+    fn tload(&self, address: W) -> Result<W, Box<dyn Error>>;
     fn as_mut(&mut self) -> &mut Self::Mutable;
 }
 
@@ -48,6 +49,7 @@ pub trait ContextMut<W: Word>: Context<W> {
         call_info: CallInfo<W>,
     ) -> Result<ExecutionResult, ExecError>;
     fn sstore(&mut self, contract: W::Addr, address: W, value: W) -> Result<(), Box<dyn Error>>;
+    fn tstore(&mut self, address: W, value: W) -> Result<(), Box<dyn Error>>;
     fn log(
         &mut self,
         address: W::Addr,
@@ -69,6 +71,7 @@ pub struct MiniEthereum {
     precompiles:
         HashMap<Address, &'static dyn Fn(CallInfo<U256>) -> Result<ExecutionResult, ExecError>>,
     pub accounts: HashMap<Address, Account>,
+    pub transient: HashMap<U256, U256>,
 }
 
 fn rlp_address_nonce(addr: Address, nonce: U256) -> Vec<u8> {
@@ -98,12 +101,16 @@ impl MiniEthereum {
         Self {
             precompiles: [(Address::ZERO, ecrecover)].into_iter().collect(),
             accounts: HashMap::new(),
+            transient: HashMap::new(),
         }
     }
 }
 
 impl Context<U256> for MiniEthereum {
     type Mutable = Self;
+    fn tload(&self, address: U256) -> Result<U256, Box<dyn Error>> {
+        Ok(self.transient.get(&address).cloned().unwrap_or_default())
+    }
     fn as_mut(&mut self) -> &mut Self::Mutable {
         self
     }
@@ -146,6 +153,10 @@ impl Context<U256> for MiniEthereum {
 }
 
 impl ContextMut<U256> for MiniEthereum {
+    fn tstore(&mut self, address: U256, value: U256) -> Result<(), Box<dyn Error>> {
+        self.transient.insert(address, value);
+        Ok(())
+    }
     fn create(
         &mut self,
         gas_tracker: &mut GasTracker,

@@ -91,7 +91,6 @@ pub struct Machine<'a, W: Word> {
     pub pc: usize,
     pub stack: Vec<W>,
     pub memory: Vec<u8>,
-    pub transient: HashMap<W, W>,
     pub last_return: Option<Vec<u8>>,
 }
 
@@ -104,7 +103,6 @@ impl<'a, W: Word> Machine<'a, W> {
             pc: 0,
             stack: Vec::new(),
             memory: Vec::new(),
-            transient: HashMap::new(),
             last_return: None,
         }
     }
