@@ -37,7 +37,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
             &mut gas_tracker,
             CallInfo {
                 origin: call_info.origin,
-                caller: call_info.caller,
+                caller: machine.address,
                 call_value: value,
                 calldata: code,
                 is_static: call_info.is_static,
