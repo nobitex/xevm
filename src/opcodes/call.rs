@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use crate::context::ContextMut;
 use crate::error::ExecError;
@@ -28,9 +30,13 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
             return Err(ExecError::Revert(RevertError::CannotMutateStatic));
         }
 
+        let gas = machine.pop_stack()?.to_usize()?;
+        if gas > machine.gas_tracker.remaining_gas() {
+            return Err(ExecError::Revert(RevertError::InsufficientGas));
+        }
+
         let mut new_call_info = call_info.clone();
 
-        let gas = machine.pop_stack()?.to_usize()?;
         let address = machine.pop_stack()?.to_addr()?;
         if self == &OpcodeCall::Call {
             new_call_info.value = machine.pop_stack()?;
@@ -39,9 +45,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         let args_size = machine.pop_stack()?.to_usize()?;
         let ret_offset = machine.pop_stack()?.to_usize()?;
         let ret_size = machine.pop_stack()?.to_usize()?;
-        let args = machine.mem_get(args_offset, args_size)?;
 
-        new_call_info.data = args;
+        new_call_info.data = machine.mem_get(args_offset, args_size)?;
         new_call_info.caller = match self {
             OpcodeCall::DelegateCall => call_info.caller,
             _ => machine.address,

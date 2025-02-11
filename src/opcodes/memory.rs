@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
@@ -86,7 +88,6 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMstore {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.to_usize()?;
@@ -104,7 +105,6 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMload {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.to_usize()?;
@@ -122,7 +122,6 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMstore8 {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.to_usize()?;
@@ -140,7 +139,6 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMcopy {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_offset = machine.pop_stack()?.to_usize()?;

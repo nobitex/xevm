@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use crate::error::{ExecError, RevertError};
 use crate::machine::{CallInfo, GasTracker, Word};
