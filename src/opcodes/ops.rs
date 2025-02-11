@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
@@ -138,8 +140,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBinaryOp {
             Self::And => a.and(b),
             Self::Or => a.or(b),
             Self::Xor => a.xor(b),
-            Self::Lt => W::from_u64((a < b) as u64),
-            Self::Gt => W::from_u64((a > b) as u64),
+            Self::Lt => W::from_u64((a.lt(b)) as u64),
+            Self::Gt => W::from_u64((a.gt(b)) as u64),
             Self::Slt => W::from_u64(match (a.is_neg(), b.is_neg()) {
                 (false, false) => a.lt(b),
                 (false, true) => false,
@@ -330,6 +332,26 @@ mod tests {
     }
 
     #[test]
+    fn test_opcode_add_mul_mod() {
+        test(
+            vec![],
+            OpcodeModularOp::AddMod,
+            &[(
+                &[U256::from(12345), U256::from(23456), U256::from(3456)],
+                Some(&[U256::from(1241)]),
+            )],
+        );
+        test(
+            vec![],
+            OpcodeModularOp::MulMod,
+            &[(
+                &[U256::from(12345), U256::from(23456), U256::from(3456)],
+                Some(&[U256::from(3360)]),
+            )],
+        );
+    }
+
+    #[test]
     fn test_opcode_is_zero() {
         test(
             vec![],
@@ -340,6 +362,21 @@ mod tests {
                 (&[U256::from(123)], Some(&[U256::ZERO])),
                 (&[U256::MAX], Some(&[U256::ZERO])),
                 (&[U256::MAX - U256::ONE], Some(&[U256::ZERO])),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_opcode_not() {
+        test(
+            vec![],
+            OpcodeUnaryOp::Not,
+            &[
+                (&[], None),
+                (&[U256::ZERO], Some(&[U256::MAX])),
+                (&[U256::ONE], Some(&[U256::MAX - U256::ONE])),
+                (&[U256::MAX], Some(&[U256::ZERO])),
+                (&[U256::MAX - U256::ONE], Some(&[U256::ONE])),
             ],
         );
     }

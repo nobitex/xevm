@@ -42,7 +42,7 @@ pub use swap::OpcodeSwap;
 
 use crate::{
     context::Context,
-    error::ExecError,
+    error::{ExecError, RevertError},
     machine::{CallInfo, Machine, Word},
 };
 
@@ -70,13 +70,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeUnsupported {
         _machine: &mut Machine<W>,
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        Err(ExecError::Context(
-            format!(
-                "Opcode 0x{:02x} is not supported! Feel free to open a PR! :)",
-                self.0
-            )
-            .into(),
-        ))
+        Err(ExecError::Revert(RevertError::UnknownOpcode(self.0)))
     }
 }
 
