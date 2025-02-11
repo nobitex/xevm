@@ -198,6 +198,7 @@ mod tests {
     #[test]
     fn test_opcode_sar() {
         test(
+            vec![],
             OpcodeBinaryOp::Sar,
             &[
                 (&[], None),
@@ -226,6 +227,7 @@ mod tests {
     #[test]
     fn test_opcode_lt() {
         test(
+            vec![],
             OpcodeBinaryOp::Lt,
             &[
                 (&[], None),
@@ -249,6 +251,7 @@ mod tests {
     #[test]
     fn test_opcode_gt() {
         test(
+            vec![],
             OpcodeBinaryOp::Gt,
             &[
                 (&[], None),
@@ -272,6 +275,7 @@ mod tests {
     #[test]
     fn test_opcode_slt() {
         test(
+            vec![],
             OpcodeBinaryOp::Slt,
             &[
                 (&[], None),
@@ -291,6 +295,7 @@ mod tests {
     #[test]
     fn test_opcode_sgt() {
         test(
+            vec![],
             OpcodeBinaryOp::Sgt,
             &[
                 (&[], None),
@@ -310,6 +315,7 @@ mod tests {
     #[test]
     fn test_opcode_eq() {
         test(
+            vec![],
             OpcodeBinaryOp::Eq,
             &[
                 (&[], None),
@@ -326,6 +332,7 @@ mod tests {
     #[test]
     fn test_opcode_is_zero() {
         test(
+            vec![],
             OpcodeUnaryOp::IsZero,
             &[
                 (&[], None),
@@ -340,6 +347,7 @@ mod tests {
     #[test]
     fn test_opcode_sdiv() {
         test(
+            vec![],
             OpcodeBinaryOp::Sdiv,
             &[
                 (&[U256::from(11), U256::from(2)], Some(&[U256::from(5)])),
@@ -356,6 +364,7 @@ mod tests {
     #[test]
     fn test_opcode_smod() {
         test(
+            vec![],
             OpcodeBinaryOp::Smod,
             &[
                 (&[U256::from(11), U256::from(3)], Some(&[U256::from(2)])),
@@ -385,6 +394,7 @@ mod tests {
     #[test]
     fn test_sign_extend() {
         test(
+            vec![],
             OpcodeBinaryOp::SignExtend,
             &[
                 (&[U256::from(0), U256::from(0xff)], Some(&[U256::MAX])),

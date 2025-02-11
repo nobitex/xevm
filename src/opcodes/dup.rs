@@ -43,6 +43,7 @@ mod tests {
     #[test]
     fn test_opcode_dup() {
         test(
+            vec![],
             OpcodeDup(0),
             &[
                 (&[], None),
@@ -57,6 +58,7 @@ mod tests {
             ],
         );
         test(
+            vec![],
             OpcodeDup(1),
             &[
                 (&[], None),

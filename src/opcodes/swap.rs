@@ -45,6 +45,7 @@ mod tests {
     #[test]
     fn test_opcode_swap() {
         test(
+            vec![],
             OpcodeSwap(0),
             &[
                 (&[], None),
@@ -56,6 +57,7 @@ mod tests {
             ],
         );
         test(
+            vec![],
             OpcodeSwap(1),
             &[
                 (&[], None),

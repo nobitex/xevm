@@ -89,13 +89,14 @@ mod tests {
     use super::*;
 
     pub fn test<O: OpcodeHandler<U256, MiniEthereum>>(
+        code: Vec<u8>,
         opcode_handler: O,
         testcases: &[(&[U256], Option<&[U256]>)],
     ) {
         for (inp, expected_out) in testcases {
             let mut gt = GasTracker::new(10000000);
             let mut ctx = MiniEthereum::new();
-            let mut machine = Machine::new(Address::ZERO, vec![], &mut gt, 1024);
+            let mut machine = Machine::new(Address::ZERO, code.clone(), &mut gt, 1024);
             let mut inp_reversed = inp.to_vec();
             inp_reversed.reverse();
             machine.stack.extend(inp_reversed);
