@@ -29,7 +29,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeLog {
             machine.consume_gas(375)?;
             topics.push(machine.pop_stack()?);
         }
-        let data = machine.mem_get(offset, size);
+        let data = machine.mem_get(offset, size)?;
         ctx.as_mut().log(machine.address, topics, data)?;
         machine.pc += 1;
         Ok(None)

@@ -29,7 +29,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
         } else {
             None
         };
-        let code = machine.mem_get(offset, size);
+        let code = machine.mem_get(offset, size)?;
         let mut gas_tracker = GasTracker::new(machine.gas_tracker.remaining_gas());
         let stack_size = machine.stack_size - machine.stack.len();
         match ctx.as_mut().create(

@@ -247,13 +247,14 @@ impl<'a, W: Word> Machine<'a, W> {
         self.memory[target_offset..target_offset + src.len()].copy_from_slice(src);
         Ok(())
     }
-    pub fn mem_get(&mut self, offset: usize, size: usize) -> Vec<u8> {
+    pub fn mem_get(&mut self, offset: usize, size: usize) -> Result<Vec<u8>, RevertError> {
+        self.consume_gas(size * 3)?;
         let mut ret = vec![0u8; size];
         if offset < self.memory.len() {
             let sz = std::cmp::min(self.memory.len().saturating_sub(offset), size);
             ret[..sz].copy_from_slice(&self.memory[offset..offset + sz]);
         }
-        ret
+        Ok(ret)
     }
     pub fn push_stack(&mut self, value: W) -> Result<(), RevertError> {
         if self.stack.len() >= self.stack_size {
@@ -305,9 +306,9 @@ mod tests {
         let mut gt = GasTracker::new(10000000);
         let mut m = Machine::<U256>::new(Address::ZERO, vec![], &mut gt, 1024);
         m.memory = vec![0, 10, 20, 30, 40, 50];
-        assert_eq!(m.mem_get(1, 3), vec![10, 20, 30]);
+        assert_eq!(m.mem_get(1, 3).unwrap(), vec![10, 20, 30]);
         assert_eq!(
-            m.mem_get(0, 100),
+            m.mem_get(0, 100).unwrap(),
             vec![
                 0, 10, 20, 30, 40, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -315,7 +316,7 @@ mod tests {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             ]
         );
-        assert_eq!(m.mem_get(100, 2), vec![0, 0]);
-        assert_eq!(m.mem_get(5, 2), vec![50, 0]);
+        assert_eq!(m.mem_get(100, 2).unwrap(), vec![0, 0]);
+        assert_eq!(m.mem_get(5, 2).unwrap(), vec![50, 0]);
     }
 }

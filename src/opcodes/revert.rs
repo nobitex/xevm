@@ -20,7 +20,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeRevert {
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        let revert_value = machine.mem_get(offset, size);
+        let revert_value = machine.mem_get(offset, size)?;
         Err(ExecError::Revert(RevertError::Revert(revert_value)))
     }
 }

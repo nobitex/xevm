@@ -108,7 +108,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMload {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?.to_usize()?;
-        let ret = machine.mem_get(addr, 32);
+        let ret = machine.mem_get(addr, 32)?;
         machine.push_stack(W::from_big_endian(&ret))?;
         machine.pc += 1;
         Ok(None)
@@ -146,7 +146,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeMcopy {
         let dest_offset = machine.pop_stack()?.to_usize()?;
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        let data = machine.mem_get(offset, size);
+        let data = machine.mem_get(offset, size)?;
         machine.mem_put(dest_offset, &data, 0, data.len())?;
         machine.pc += 1;
         Ok(None)
