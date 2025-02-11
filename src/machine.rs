@@ -10,8 +10,8 @@ use crate::opcodes::*;
 pub struct CallInfo<W: Word> {
     pub origin: W::Addr,
     pub caller: W::Addr,
-    pub call_value: W,
-    pub calldata: Vec<u8>,
+    pub value: W,
+    pub data: Vec<u8>,
     pub is_static: bool,
 }
 
@@ -22,7 +22,7 @@ pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + O
     const ONE: Self;
     const BITS: usize;
     fn from_addr(addr: Self::Addr) -> Self;
-    fn to_addr(self) -> Self::Addr;
+    fn to_addr(self) -> Result<Self::Addr, RevertError>;
     fn hex(&self) -> String;
     fn low_u64(&self) -> u64;
     fn from_u64(val: u64) -> Self;
@@ -30,7 +30,7 @@ pub trait Word: Clone + Debug + Default + Copy + PartialEq + Eq + PartialOrd + O
     fn is_neg(&self) -> bool {
         self.bit(Self::BITS - 1)
     }
-    fn to_usize(&self) -> Result<usize, ExecError>;
+    fn to_usize(&self) -> Result<usize, RevertError>;
     fn from_big_endian(slice: &[u8]) -> Self;
     fn to_big_endian(&self) -> Vec<u8>;
     fn add(self, other: Self) -> Self;

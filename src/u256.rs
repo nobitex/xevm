@@ -1,7 +1,4 @@
-use crate::{
-    error::{ExecError, RevertError},
-    machine::Word,
-};
+use crate::{error::RevertError, machine::Word};
 
 use alloy_primitives::primitives::Address;
 pub use alloy_primitives::primitives::U256;
@@ -11,8 +8,13 @@ impl Word for U256 {
     fn from_addr(addr: Self::Addr) -> Self {
         Self::from_big_endian(addr.as_slice())
     }
-    fn to_addr(self) -> Self::Addr {
-        Address::from_slice(&self.to_big_endian()[12..])
+    fn to_addr(self) -> Result<Self::Addr, RevertError> {
+        let max_addr = (U256::ONE << U256::from(160)) - U256::ONE;
+        if self < max_addr {
+            Ok(Address::from_slice(&self.to_big_endian()[12..]))
+        } else {
+            Err(RevertError::AddressTooLarge)
+        }
     }
     const BITS: usize = 256;
     const MAX: Self = U256::MAX;
@@ -85,11 +87,11 @@ impl Word for U256 {
     fn to_big_endian(&self) -> Vec<u8> {
         self.to_be_bytes_vec()
     }
-    fn to_usize(&self) -> Result<usize, ExecError> {
+    fn to_usize(&self) -> Result<usize, RevertError> {
         if *self < Self::from_u64(usize::MAX as u64) {
             Ok(self.as_limbs()[0] as usize)
         } else {
-            Err(ExecError::Revert(RevertError::OffsetSizeTooLarge))
+            Err(RevertError::OffsetSizeTooLarge)
         }
     }
     fn xor(self, other: Self) -> Self {

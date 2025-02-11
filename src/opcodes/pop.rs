@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use crate::error::ExecError;
 use crate::machine::{CallInfo, Word};
@@ -13,7 +15,6 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodePop {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         machine.pop_stack()?;

@@ -38,8 +38,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCreate {
             CallInfo {
                 origin: call_info.origin,
                 caller: machine.address,
-                call_value: value,
-                calldata: code,
+                value,
+                data: code,
                 is_static: call_info.is_static,
             },
             salt,

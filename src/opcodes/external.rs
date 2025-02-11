@@ -1,3 +1,5 @@
+/* Audited 11 Feb 2025 - Keyvan Kambakhsh */
+
 use super::ExecutionResult;
 use super::OpcodeHandler;
 use crate::context::Context;
@@ -29,11 +31,10 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeBalance {
         &self,
         ctx: &mut C,
         machine: &mut Machine<W>,
-
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
-        machine.push_stack(ctx.balance(addr.to_addr())?)?;
+        machine.push_stack(ctx.balance(addr.to_addr()?)?)?;
         machine.pc += 1;
         Ok(None)
     }
@@ -46,10 +47,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCallValue {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.push_stack(call_info.call_value)?;
+        machine.push_stack(call_info.value)?;
         machine.pc += 1;
         Ok(None)
     }
@@ -157,10 +157,9 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataSize {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
-        machine.push_stack(W::from_u64(call_info.calldata.len() as u64))?;
+        machine.push_stack(W::from_u64(call_info.data.len() as u64))?;
         machine.pc += 1;
         Ok(None)
     }
@@ -173,13 +172,12 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataCopy {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let dest_addr = machine.pop_stack()?.to_usize()?;
         let addr = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        machine.mem_put(dest_addr, &call_info.calldata, addr, size)?;
+        machine.mem_put(dest_addr, &call_info.data, addr, size)?;
         machine.pc += 1;
         Ok(None)
     }
@@ -192,17 +190,12 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCalldataLoad {
         &self,
         _ctx: &mut C,
         machine: &mut Machine<W>,
-
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let offset = machine.pop_stack()?.to_usize()?;
         let mut ret = [0u8; 32];
         for i in 0..32 {
-            ret[i] = call_info
-                .calldata
-                .get(offset + i)
-                .copied()
-                .unwrap_or_default();
+            ret[i] = call_info.data.get(offset + i).copied().unwrap_or_default();
         }
         machine.push_stack(W::from_big_endian(&ret))?;
         machine.pc += 1;
@@ -220,7 +213,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeSize {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
-        let code = ctx.code(addr.to_addr())?;
+        let code = ctx.code(addr.to_addr()?)?;
         machine.push_stack(W::from_u64(code.len() as u64))?;
         machine.pc += 1;
         Ok(None)
@@ -240,7 +233,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeCopy {
         let dest_offset = machine.pop_stack()?.to_usize()?;
         let offset = machine.pop_stack()?.to_usize()?;
         let size = machine.pop_stack()?.to_usize()?;
-        let code = ctx.code(addr.to_addr())?;
+        let code = ctx.code(addr.to_addr()?)?;
         machine.mem_put(dest_offset, &code, offset, size)?;
         machine.pc += 1;
         Ok(None)
@@ -257,7 +250,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeExtCodeHash {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let addr = machine.pop_stack()?;
-        let code_hash = keccak(&ctx.code(addr.to_addr())?);
+        let code_hash = keccak(&ctx.code(addr.to_addr()?)?);
         machine.push_stack(W::from_big_endian(&code_hash))?;
         machine.pc += 1;
         Ok(None)
@@ -290,7 +283,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeSelfDestruct {
         _call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let target = machine.pop_stack()?;
-        ctx.destroy(machine.address, target.to_addr())?;
+        ctx.destroy(machine.address, target.to_addr()?)?;
         Ok(Some(ExecutionResult::Halted))
     }
 }

@@ -32,6 +32,7 @@ pub enum RevertError {
     NotEnoughValuesOnStack,
     NotEnoughBytesInCode,
     OffsetSizeTooLarge,
+    AddressTooLarge,
     InvalidJump,
     Revert(Vec<u8>),
     InsufficientBalance,

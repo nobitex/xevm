@@ -24,16 +24,16 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         call_info: &CallInfo<W>,
     ) -> Result<Option<ExecutionResult>, ExecError> {
         let is_static = call_info.is_static || self == &OpcodeCall::StaticCall;
-        if is_static && call_info.call_value != W::ZERO {
+        if is_static && call_info.value != W::ZERO {
             return Err(ExecError::Revert(RevertError::CannotMutateStatic));
         }
 
         let mut new_call_info = call_info.clone();
 
         let gas = machine.pop_stack()?.to_usize()?;
-        let address = machine.pop_stack()?.to_addr();
+        let address = machine.pop_stack()?.to_addr()?;
         if self == &OpcodeCall::Call {
-            new_call_info.call_value = machine.pop_stack()?;
+            new_call_info.value = machine.pop_stack()?;
         }
         let args_offset = machine.pop_stack()?.to_usize()?;
         let args_size = machine.pop_stack()?.to_usize()?;
@@ -41,7 +41,7 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
         let ret_size = machine.pop_stack()?.to_usize()?;
         let args = machine.mem_get(args_offset, args_size);
 
-        new_call_info.calldata = args;
+        new_call_info.data = args;
         new_call_info.caller = match self {
             OpcodeCall::DelegateCall => call_info.caller,
             _ => machine.address,

@@ -167,8 +167,8 @@ impl ContextMut<U256> for MiniEthereum {
         salt: Option<U256>,
     ) -> Result<Address, ExecError> {
         let acc = self.accounts.entry(call_info.caller).or_default();
-        if acc.value >= call_info.call_value {
-            acc.value = acc.value - call_info.call_value;
+        if acc.value >= call_info.value {
+            acc.value = acc.value - call_info.value;
             acc.nonce = acc.nonce + U256::ONE;
         } else {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
@@ -177,7 +177,7 @@ impl ContextMut<U256> for MiniEthereum {
             let mut inp = vec![0xffu8];
             inp.extend(call_info.caller.as_slice());
             inp.extend(&salt.to_big_endian());
-            inp.extend(&keccak(&call_info.calldata));
+            inp.extend(&keccak(&call_info.data));
             Address::from_slice(&keccak(&inp)[12..32])
         } else {
             Address::from_slice(&keccak(&rlp_address_nonce(call_info.caller, acc.nonce))[12..32])
@@ -194,14 +194,14 @@ impl ContextMut<U256> for MiniEthereum {
         }
 
         self.accounts.entry(contract_addr).or_default();
-        self.accounts.get_mut(&contract_addr).unwrap().value = call_info.call_value;
+        self.accounts.get_mut(&contract_addr).unwrap().value = call_info.value;
 
-        let exec_result = Machine::new(contract_addr, call_info.calldata, gas_tracker, stack_size)
+        let exec_result = Machine::new(contract_addr, call_info.data, gas_tracker, stack_size)
             .run(
                 self,
                 &CallInfo {
-                    call_value: call_info.call_value,
-                    calldata: vec![],
+                    value: call_info.value,
+                    data: vec![],
                     origin: call_info.origin,
                     caller: call_info.caller,
                     is_static: false,
@@ -228,14 +228,14 @@ impl ContextMut<U256> for MiniEthereum {
             return precompile(call_info);
         }
         let caller = self.accounts.entry(call_info.caller).or_default();
-        if caller.value >= call_info.call_value {
-            caller.value = caller.value - call_info.call_value;
+        if caller.value >= call_info.value {
+            caller.value = caller.value - call_info.value;
             caller.nonce = caller.nonce + U256::ONE;
         } else {
             return Err(ExecError::Revert(RevertError::InsufficientBalance));
         }
         let contract = self.accounts.entry(address).or_default();
-        contract.value = contract.value + call_info.call_value;
+        contract.value = contract.value + call_info.value;
         let machine = Machine::new(address, contract.code.clone(), gas_tracker, stack_size);
         let exec_result = machine.run(self, &call_info)?;
         Ok(exec_result)
@@ -323,8 +323,8 @@ mod tests {
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
-                    call_value: U256::from_u64(2),
-                    calldata: COUNTER_CODE.to_vec(),
+                    value: U256::from_u64(2),
+                    data: COUNTER_CODE.to_vec(),
                     is_static: false,
                 },
                 None,
@@ -342,8 +342,8 @@ mod tests {
                 CallInfo {
                     origin: Address::ZERO,
                     caller: Address::ZERO,
-                    call_value: U256::ZERO,
-                    calldata: inp.to_vec(),
+                    value: U256::ZERO,
+                    data: inp.to_vec(),
                     is_static: false,
                 },
             )
@@ -375,8 +375,8 @@ mod tests {
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
-                call_value: U256::from_u64(0),
-                calldata: COUNTER_CODE.to_vec(),
+                value: U256::from_u64(0),
+                data: COUNTER_CODE.to_vec(),
                 is_static: false,
             },
             None,
@@ -401,8 +401,8 @@ mod tests {
             CallInfo {
                 origin: Address::ZERO,
                 caller: addr(123),
-                call_value: U256::from_u64(2),
-                calldata: vec![],
+                value: U256::from_u64(2),
+                data: vec![],
                 is_static: false,
             },
         )
@@ -419,8 +419,8 @@ mod tests {
                 CallInfo {
                     origin: Address::ZERO,
                     caller: addr(123),
-                    call_value: U256::from_u64(4),
-                    calldata: vec![],
+                    value: U256::from_u64(4),
+                    data: vec![],
                     is_static: false
                 },
             ),
@@ -445,8 +445,8 @@ mod tests {
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
-                    call_value: U256::from_u64(2),
-                    calldata: COUNTER_CODE.to_vec(),
+                    value: U256::from_u64(2),
+                    data: COUNTER_CODE.to_vec(),
                     is_static: false,
                 },
                 None,
@@ -460,8 +460,8 @@ mod tests {
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
-                    call_value: U256::from_u64(2),
-                    calldata: COUNTER_CODE.to_vec(),
+                    value: U256::from_u64(2),
+                    data: COUNTER_CODE.to_vec(),
                     is_static: false,
                 },
                 None,
@@ -490,8 +490,8 @@ mod tests {
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
-                call_value: U256::from_u64(0),
-                calldata: COUNTER_CODE.to_vec(),
+                value: U256::from_u64(0),
+                data: COUNTER_CODE.to_vec(),
                 is_static: false,
             },
             Some(U256::from_u64(123)),
@@ -502,8 +502,8 @@ mod tests {
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
-                call_value: U256::from_u64(0),
-                calldata: COUNTER_CODE.to_vec(),
+                value: U256::from_u64(0),
+                data: COUNTER_CODE.to_vec(),
                 is_static: false,
             },
             Some(U256::from_u64(234)),
@@ -525,8 +525,8 @@ mod tests {
                 CallInfo {
                     origin: addr(123),
                     caller: addr(123),
-                    call_value: U256::from_u64(0),
-                    calldata: COUNTER_CODE.to_vec(),
+                    value: U256::from_u64(0),
+                    data: COUNTER_CODE.to_vec(),
                     is_static: false
                 },
                 Some(U256::from_u64(123))

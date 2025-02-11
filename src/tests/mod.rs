@@ -44,8 +44,8 @@ fn test_erc20_deploy() {
             CallInfo {
                 origin: addr(123),
                 caller: addr(123),
-                call_value: U256::from(0),
-                calldata: creation_code,
+                value: U256::from(0),
+                data: creation_code,
                 is_static: false,
             },
             None,
@@ -62,8 +62,8 @@ fn test_erc20_deploy() {
                 CallInfo {
                     origin: from,
                     caller: from,
-                    call_value: U256::ZERO,
-                    calldata: inp.to_vec(),
+                    value: U256::ZERO,
+                    data: inp.to_vec(),
                     is_static: false,
                 },
             )
