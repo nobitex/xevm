@@ -30,10 +30,8 @@ impl<W: Word, C: Context<W>> OpcodeHandler<W, C> for OpcodeCall {
             return Err(ExecError::Revert(RevertError::CannotMutateStatic));
         }
 
-        let gas = machine.pop_stack()?.to_usize()?;
-        if gas > machine.gas_tracker.remaining_gas() {
-            return Err(ExecError::Revert(RevertError::InsufficientGas));
-        }
+        let allowed_gas = machine.pop_stack()?.to_usize()?;
+        let gas = std::cmp::min(allowed_gas, machine.gas_tracker.remaining_gas());
 
         let mut new_call_info = call_info.clone();
 
