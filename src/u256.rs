@@ -10,7 +10,7 @@ impl Word for U256 {
     }
     fn to_addr(self) -> Result<Self::Addr, RevertError> {
         let max_addr = (U256::ONE << U256::from(160)) - U256::ONE;
-        if self < max_addr {
+        if self <= max_addr {
             Ok(Address::from_slice(&self.to_big_endian()[12..]))
         } else {
             Err(RevertError::AddressTooLarge)
