@@ -204,8 +204,8 @@ impl<'a, W: Word> Machine<'a, W> {
         opcode_table.insert(0xf1, Box::new(OpcodeCall::Call));
         opcode_table.insert(0xf2, Box::new(OpcodeUnsupported(0xf2)));
         opcode_table.insert(0xf3, Box::new(OpcodeReturn));
-        opcode_table.insert(0xf2, Box::new(OpcodeCall::DelegateCall));
-        opcode_table.insert(0xf2, Box::new(OpcodeCreate::Create2));
+        opcode_table.insert(0xf4, Box::new(OpcodeCall::DelegateCall));
+        opcode_table.insert(0xf5, Box::new(OpcodeCreate::Create2));
         opcode_table.insert(0xfa, Box::new(OpcodeCall::StaticCall));
         opcode_table.insert(0xfd, Box::new(OpcodeRevert));
         opcode_table.insert(0xff, Box::new(OpcodeSelfDestruct));
